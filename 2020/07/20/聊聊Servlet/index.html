@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>聊聊Servlet | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="聊一聊Java程序员不得不接触的Servlet">
+<meta property="og:type" content="article">
+<meta property="og:title" content="聊聊Servlet">
+<meta property="og:url" content="http://yoursite.com/2020/07/20/%E8%81%8A%E8%81%8AServlet/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="聊一聊Java程序员不得不接触的Servlet">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://yoursite.com/2020/07/20/%E8%81%8A%E8%81%8AServlet/%5C%E8%81%8A%E8%81%8AServlet%5Cimage-20200720192811764.png">
+<meta property="og:image" content="http://yoursite.com/2020/07/20/%E8%81%8A%E8%81%8AServlet/%5C%E8%81%8A%E8%81%8AServlet%5Cimage-20200720193028789.png">
+<meta property="og:image" content="http://yoursite.com/2020/07/20/%E8%81%8A%E8%81%8AServlet/%5C%E8%81%8A%E8%81%8AServlet%5Cimage-20200720193931791.png">
+<meta property="og:image" content="http://yoursite.com/2020/07/20/%E8%81%8A%E8%81%8AServlet/%5C%E8%81%8A%E8%81%8AServlet%5Cimage-20200720194506435.png">
+<meta property="og:image" content="http://yoursite.com/2020/07/20/%E8%81%8A%E8%81%8AServlet/%5C%E8%81%8A%E8%81%8AServlet%5Cimage-20200720194800359.png">
+<meta property="og:image" content="http://yoursite.com/2020/07/20/%E8%81%8A%E8%81%8AServlet/%5C%E8%81%8A%E8%81%8AServlet%5Cimage-20200720195631968.png">
+<meta property="article:published_time" content="2020-07-20T10:26:18.000Z">
+<meta property="article:modified_time" content="2020-07-24T03:37:05.930Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Javaweb Servlet">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2020/07/20/%E8%81%8A%E8%81%8AServlet/%5C%E8%81%8A%E8%81%8AServlet%5Cimage-20200720192811764.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    
+    <div id="header-inner" class="inner">
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">首页</a>
+        
+          <a class="main-nav-link" href="/archives">归档</a>
+        
+          <a class="main-nav-link" href="/about">关于</a>
+        
+      </nav>
+      
+    </div>
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-聊聊Servlet" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/07/20/%E8%81%8A%E8%81%8AServlet/" class="article-date">
+  <time datetime="2020-07-20T10:26:18.000Z" itemprop="datePublished">2020-07-20</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      聊聊Servlet
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- Table of Contents -->
+        
+        <p>聊一聊Java程序员不得不接触的Servlet</p>
+<a id="more"></a>
+<h2 id="Servlet是什么"><a href="#Servlet是什么" class="headerlink" title="Servlet是什么"></a>Servlet是什么</h2><p>Servlet其实并没有一个明确的定义，习惯上更喜欢称它是一种类似于<strong>Serv</strong>er app<strong>let</strong>的服务端小程序. 程序员为一种技术起名字并不喜欢给一种类似于教科书上的定义，更多的是喜欢描述这门技术是用来干什么的。</p>
+<hr>
+<h2 id="Servlet有什么用"><a href="#Servlet有什么用" class="headerlink" title="Servlet有什么用"></a>Servlet有什么用</h2><p>在说它有什么用之前我们不妨通过一个例子来说明一下。<br>如果是在学校生活，最直接的交换信息方式实际上是面对面交流。（在宿舍、在教室）但是如果没有面对面又该如何交换信息，大家都知道，可以用微信、QQ、打电话或者发短信，其实就是<strong>借助一种媒介</strong>来交换信息。<br>同样，在互联网，你想要交换信息，除非是两台电脑相隔不远，你可以拿U盘从一台电脑拷贝数据到另一台电脑上实现信息交换。但如果相隔千里，总不可能坐飞机或者坐动车去把U盘交到另一台电脑。所以我们可以把我们电脑的数据映射到URL上，别人通过这个URL就可以访问我们电脑上的数据。<strong>URL其实就是一种媒介</strong>，而Servlet正是用来将信息映射到一个URL上的。</p>
+<hr>
+<h2 id="如何应用Servlet"><a href="#如何应用Servlet" class="headerlink" title="如何应用Servlet"></a>如何应用Servlet</h2><p><strong>项目准备</strong></p>
+<ul>
+<li>Intelij Idea</li>
+<li>Tomcat</li>
+</ul>
+<p><strong>开始</strong></p>
+<p>可以在IDEA中创建一个Web项目</p>
+<p><img src="%5C%E8%81%8A%E8%81%8AServlet%5Cimage-20200720192811764.png" alt=""></p>
+<p>结构目录如下：</p>
+<p><img src="%5C%E8%81%8A%E8%81%8AServlet%5Cimage-20200720193028789.png" alt="image-20200720193028789"></p>
+<p><code>src</code> :用来存放源代码的地方，也就是在里面可以编写我们的各种类。</p>
+<p><code>web</code>:存放web应用所需的资源和相关配置文件。</p>
+<p><code>WEB-INF</code>:存放Sevlet映射URL的配置文件。</p>
+<p>1）、创建Hello类实现Servlet接口</p>
+<p><img src="%5C%E8%81%8A%E8%81%8AServlet%5Cimage-20200720193931791.png" alt="image-20200720193931791"></p>
+<p>从接口中的五个方法我们也可悉知这其实就是Servlet的生命周期。</p>
+<ol>
+<li>创建并初始化：init()</li>
+<li>处理业务： service()</li>
+<li>销毁：destroy()</li>
+</ol>
+<p>2）、编写业务代码</p>
+<p><img src="%5C%E8%81%8A%E8%81%8AServlet%5Cimage-20200720194506435.png" alt="image-20200720194506435"></p>
+<p>我们可以通过输出流向浏览器输出字符串Hello World。</p>
+<p>3）、在web.xml中完成serlet的映射</p>
+<p><img src="%5C%E8%81%8A%E8%81%8AServlet%5Cimage-20200720194800359.png" alt="image-20200720194800359"></p>
+<p>这里涉及到了标签：<servlet>和<servlet-mapping></p>
+<blockquote>
+<p><servlet>用来标识servlet，有两个子标签：</p>
+<p><servlet-name>标签表明servlet的名字，也可以说是个外号。</p>
+<p><servlet-mapping>标签表明servlet的类名，也就是我们前面写的Hello</p>
+</blockquote>
+<blockquote>
+<p><servlet-mapping>用来映射URL，有两个子标签:</p>
+<p><servlet-name>和之前同理。</p>
+<p><url-pattern>标签表明servlet映射的URL。</p>
+<p>完整含义就是：类名为Hello的Servlet映射的URL是”/hello”.</p>
+</blockquote>
+<p>到这我们就已经完成了Servlet的编写。我们可以启动项目，在浏览器的url:     <a href="http://localhost:8080/context/hello" target="_blank" rel="noopener">http://localhost:8080/context/hello</a>  上可以看到Hello World。（context是项目的上下文路径）</p>
+<p><img src="%5C%E8%81%8A%E8%81%8AServlet%5Cimage-20200720195631968.png" alt="image-20200720195631968"></p>
+<p>全文完。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2020/07/20/%E8%81%8A%E8%81%8AServlet/" data-id="ckczo97y700008gu997qeay4p" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Javaweb-Servlet/" rel="tag">Javaweb Servlet</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+ 
+<script src="/jquery/jquery.min.js"></script>
+
+  <div id="random_posts">
+    <h2>Recommended Posts</h2>
+    <div class="random_posts_ul">
+      <script>
+          var random_count =4
+          var site = {BASE_URI:'/'};
+          function load_random_posts(obj) {
+              var arr=site.posts;
+              if (!obj) return;
+              // var count = $(obj).attr('data-count') || 6;
+              for (var i, tmp, n = arr.length; n; i = Math.floor(Math.random() * n), tmp = arr[--n], arr[n] = arr[i], arr[i] = tmp);
+              arr = arr.slice(0, random_count);
+              var html = '<ul>';
+            
+              for(var j=0;j<arr.length;j++){
+                var item=arr[j];
+                html += '<li><strong>' + 
+                item.date + ':&nbsp;&nbsp;<a href="' + (site.BASE_URI+item.uri) + '">' + 
+                (item.title || item.uri) + '</a></strong>';
+                if(item.excerpt){
+                  html +='<div class="post-excerpt">'+item.excerpt+'</div>';
+                }
+                html +='</li>';
+                
+              }
+              $(obj).html(html + '</ul>');
+          }
+          $('.random_posts_ul').each(function () {
+              var c = this;
+              if (!site.posts || !site.posts.length){
+                  $.getJSON(site.BASE_URI + 'js/posts.js',function(json){site.posts = json;load_random_posts(c)});
+              } 
+               else{
+                load_random_posts(c);
+              }
+          });
+      </script>
+    </div>
+  </div>
+
+    
+  
+</article>
+ 
+     
+  <div class="comments" id="comments">
+    
+     
+       
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+       
+      
+      
+  </div>
+ 
+  
+
+</section>
+           
+    <aside id="sidebar">
+  
+    
+
+  
+    
+    <div class="widget-wrap">
+    
+      <div class="widget" id="toc-widget-fixed">
+      
+        <strong class="toc-title">Content</strong>
+        <div class="toc-widget-list">
+              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Servlet是什么"><span class="toc-number">1.</span> <span class="toc-text">Servlet是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Servlet有什么用"><span class="toc-number">2.</span> <span class="toc-text">Servlet有什么用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#如何应用Servlet"><span class="toc-number">3.</span> <span class="toc-text">如何应用Servlet</span></a></li></ol>
+          </div>
+      </div>
+    </div>
+
+  
+    
+
+  
+    
+  
+    
+  
+    
+
+  
+    
+  
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-left">
+      &copy; 2014 - 2020 John Doe&nbsp;|&nbsp;
+      Theme by <a href="https://github.com/giscafer/hexo-theme-cafe/" target="_blank">Cafe</a>
+    </div>
+     <div id="footer-right">
+      Contact&nbsp;|&nbsp;1029229159@qq.com
+    </div>
+  </div>
+</footer>
+ 
+<script src="/jquery/jquery.min.js"></script>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">首页</a>
+  
+    <a href="/archives" class="mobile-nav-link">归档</a>
+  
+    <a href="/about" class="mobile-nav-link">关于</a>
+  
+</nav>
+    <img class="back-to-top-btn" src="/images/fly-to-top.png"/>
+<script>
+// Elevator script included on the page, already.
+window.onload = function() {
+  var elevator = new Elevator({
+    selector:'.back-to-top-btn',
+    element: document.querySelector('.back-to-top-btn'),
+    duration: 1000 // milliseconds
+  });
+}
+</script>
+      
+
+  
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "e2fb4051c49842688ce669e634bc983f",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+    
+
+  
+
+
+
+
+
+
+
+<!-- author:forvoid begin -->
+<!-- author:forvoid begin -->
+
+<!-- author:forvoid end -->
+
+<!-- author:forvoid end -->
+
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      })
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      })
+    </script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+ 
+<script src="/js/is.js"></script>
+
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+<script src="/js/elevator.js"></script>
+
+  </div>
+</body>
+</html>
