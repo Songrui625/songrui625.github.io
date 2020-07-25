@@ -1,1 +1,1 @@
-[{"title":"聊聊Servlet","date":"2020.07.20","uri":"2020/07/20/聊聊Servlet/","excerpt":""}]
+[{"title":"聊聊Servlet","date":"2020.07.20","uri":"2020/07/20/聊聊Servlet/","excerpt":""},{"title":"Java注解的原理与应用","date":"2020.07.25","uri":"2020/07/25/Java注解的原理与应用/","excerpt":""}]
