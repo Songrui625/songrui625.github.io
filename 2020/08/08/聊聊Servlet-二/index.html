@@ -12,11 +12,22 @@
 <meta property="og:site_name" content="越今朝的博客">
 <meta property="og:description" content="在以前的实际业务过程中，都不会采用实现Servlet接口来创建一个Servlet，而是选择继承HttpServlet类。">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://songrui625.github.io/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813220145968.png">
+<meta property="og:image" content="http://songrui625.github.io/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813220625680.png">
+<meta property="og:image" content="http://songrui625.github.io/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813221504042.png">
+<meta property="og:image" content="http://songrui625.github.io/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813221914910.png">
+<meta property="og:image" content="http://songrui625.github.io/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813222146749.png">
+<meta property="og:image" content="http://songrui625.github.io/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813222238702.png">
+<meta property="og:image" content="http://songrui625.github.io/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813223054814.png">
+<meta property="og:image" content="http://songrui625.github.io/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813223953349.png">
+<meta property="og:image" content="http://songrui625.github.io/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813230237155.png">
+<meta property="og:image" content="http://songrui625.github.io/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813230322115.png">
 <meta property="article:published_time" content="2020-08-08T13:25:32.000Z">
-<meta property="article:modified_time" content="2020-08-08T16:20:32.453Z">
+<meta property="article:modified_time" content="2020-08-13T15:17:29.615Z">
 <meta property="article:author" content="越今朝">
 <meta property="article:tag" content="javaweb">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://songrui625.github.io/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813220145968.png">
   
     <link rel="alternate" href="/atom.xml" title="越今朝的博客" type="application/atom+xml">
   
@@ -105,22 +116,66 @@
 
 
 <p>选择重写HttpServlet中的doGet方法和doPost方法来实现我们的业务逻辑，这两个函数相当于Servlet接口中的service方法。其实HttpServlet类中也有service方法，但基本不再用了。</p>
-<h2 id="HttpServletResponse"><a href="#HttpServletResponse" class="headerlink" title="HttpServletResponse"></a>HttpServletResponse</h2><h3 id="打印字符串"><a href="#打印字符串" class="headerlink" title="打印字符串"></a>打印字符串</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="HttpServletResponse"><a href="#HttpServletResponse" class="headerlink" title="HttpServletResponse"></a>HttpServletResponse</h2><h3 id="1、客户端打印字符串"><a href="#1、客户端打印字符串" class="headerlink" title="1、客户端打印字符串"></a>1、客户端打印字符串</h3><p>回顾I/O的知识，按操作单元来分类有字节流和字符流两种。</p>
+<p><strong>注意：</strong>在一个方法中，只能使用字节流或者字符流中的一种。一旦使用了字节流，就不能再使用字符流，反之亦然。如果同时使用了两种流，可以使用restart方法重置。</p>
+<p>1）字符流：通过getWriter方法获得。</p>
+<p>2）字节流：通过getOutputStream方法获得。</p>
+<p>对于文本类的信息，通常会使用字符流。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">    PrintWriter writer = resp.getWriter();</span><br><span class="line">    writer.println(<span class="string">"Hello Servlet!"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<p>运行程序查看结果：</p>
+<p><img src="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813220145968.png" alt="image-20200813220145968"></p>
+<h3 id="2、解决中文乱码问题"><a href="#2、解决中文乱码问题" class="headerlink" title="2、解决中文乱码问题"></a>2、解决中文乱码问题</h3><p>我们来看下如下代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">    <span class="comment">//获取字符流</span></span><br><span class="line">    PrintWriter writer = resp.getWriter();</span><br><span class="line">    writer.println(<span class="string">"越今朝很帅"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<p><img src="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813220625680.png" alt="image-20200813220625680"></p>
+<p>向客户端打印的字符串明显不是我们想要的结果，出现这个问题的原因是因为编码格式不一致造成的。</p>
+<p><strong>通过getCharacterEncoding()方法可以得到服务器端的字符编码</strong>，我们可以在终端打印我们的服务器返回的字符编码格式。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line"><span class="comment">//获取字符集编码格式并打印到终端</span></span><br><span class="line">      System.out.println(resp.getCharacterEncoding());</span><br><span class="line">      PrintWriter writer = resp.getWriter();</span><br><span class="line">      writer.println(<span class="string">"越今朝很帅"</span>);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
 
+<p>运行程序查看结果：</p>
+<p><img src="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813221504042.png" alt="image-20200813221504042"></p>
+<p>ISO编码格式并不支持中文，<strong>通过使用setCharacterEncoding()方法更改服务器端编码格式为UTF-8</strong>来重新运行程序查看结果：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">    System.out.println(resp.getCharacterEncoding());</span><br><span class="line">    <span class="comment">//设置服务器端编码格式为UTF-8</span></span><br><span class="line">    resp.setCharacterEncoding(<span class="string">"UTF-8"</span>);</span><br><span class="line">    PrintWriter writer = resp.getWriter();</span><br><span class="line">    writer.println(<span class="string">"越今朝很帅"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<p><img src="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813221914910.png" alt="image-20200813221914910"></p>
+<p>显然浏览器就是诚心地，不想承认博主是个帅哥。</p>
+<p>虽然服务器端的编码格式改了，但是我们浏览器的编码格式却不一定正确。查看浏览器的编码格式：</p>
+<p><img src="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813222146749.png" alt="image-20200813222146749"></p>
+<p>或者通过响应头部查看：</p>
+<p><img src="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813222238702.png" alt="image-20200813222238702"></p>
+<p>可以看到浏览器的编码格式是GBK，并不是UTF-8，而且响应头部并没有设置格式。</p>
+<p><strong>通过setHeader()方法设置响应头部的Content-Type字段来指定字符编码格式</strong>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line"></span><br><span class="line">    System.out.println(resp.getCharacterEncoding());</span><br><span class="line">    resp.setCharacterEncoding(<span class="string">"UTF-8"</span>);</span><br><span class="line">    <span class="comment">//设置HTTP报文响应头部字符编码格式为UTF-8</span></span><br><span class="line">    resp.setHeader(<span class="string">"Content-Type"</span>, <span class="string">"text/plain;charset=UTF-8"</span>);</span><br><span class="line">    PrintWriter writer = resp.getWriter();</span><br><span class="line">    writer.println(<span class="string">"越今朝很帅"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<p>现在我们重新运行程序看下结果。</p>
+<p><img src="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813223054814.png" alt="image-20200813223054814"></p>
+<p>成功显示。</p>
+<p>以上只是一种方法，其实还有更为快捷的方法。</p>
+<p>通过setContentType()方法一步到位设置编码格式：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">    <span class="comment">//一步到位</span></span><br><span class="line">    resp.setContentType(<span class="string">"text/plain;charset=UTF-8"</span>);</span><br><span class="line">    PrintWriter writer = resp.getWriter();</span><br><span class="line">    writer.println(<span class="string">"越今朝很帅"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<p><strong>但是，这个方法必须要在获取流方法之前进行调用，否则无法生效</strong></p>
+<p>重新运行程序查看效果。</p>
+<p><img src="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813223953349.png" alt="image-20200813223953349"></p>
+<p>同样正确显示了字符串。</p>
+<h3 id="3、请求重定向"><a href="#3、请求重定向" class="headerlink" title="3、请求重定向"></a>3、请求重定向</h3><p>什么是请求重定向：发送了一个HTTP请求之后，得到了一个新的地址，对新的地址重新发送一个HTTP请求就叫请求重定向。（大白话）</p>
+<p>实现方法1：通过setHeader()方法设置响应状态码和响应头部进行重定向。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">    resp.setStatus(<span class="number">302</span>);</span><br><span class="line">    resp.setHeader(<span class="string">"Location"</span>, <span class="string">"http://www.baidu.com"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<p>当我们访问/home的时候会自动跳转到百度首页，并且浏览器地址栏发生了改变。</p>
+<p><img src="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813230237155.png" alt="image-20200813230237155"></p>
+<p><img src="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/image-20200813230322115.png" alt="image-20200813230322115"></p>
+<p>第二个HTTP请求拿到了第一个HTTP请求响应头Location中的地址进行重新访问。</p>
+<p>实现方法2：通过sendRedirect()方法进行重定向</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">    resp.sendRedirect(<span class="string">"http://www.baidu.com"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-
-
-
-
-
-
-
+<p>重定向的特点：</p>
+<p>1、两次请求</p>
+<p>2、浏览器地址发生变化</p>
+<p>3、不共享Request域数据</p>
+<p>4、不能访问WEB-INF下的资源</p>
+<p>全文完</p>
 
       
     </div>
@@ -220,7 +275,7 @@
       
         <strong class="toc-title">Content</strong>
         <div class="toc-widget-list">
-              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#继承HttpServlet类创建Servlet"><span class="toc-number">1.</span> <span class="toc-text">继承HttpServlet类创建Servlet</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#HttpServletResponse"><span class="toc-number">2.</span> <span class="toc-text">HttpServletResponse</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#打印字符串"><span class="toc-number">2.1.</span> <span class="toc-text">打印字符串</span></a></li></ol></li></ol>
+              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#继承HttpServlet类创建Servlet"><span class="toc-number">1.</span> <span class="toc-text">继承HttpServlet类创建Servlet</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#HttpServletResponse"><span class="toc-number">2.</span> <span class="toc-text">HttpServletResponse</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1、客户端打印字符串"><span class="toc-number">2.1.</span> <span class="toc-text">1、客户端打印字符串</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2、解决中文乱码问题"><span class="toc-number">2.2.</span> <span class="toc-text">2、解决中文乱码问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3、请求重定向"><span class="toc-number">2.3.</span> <span class="toc-text">3、请求重定向</span></a></li></ol></li></ol>
           </div>
       </div>
     </div>
