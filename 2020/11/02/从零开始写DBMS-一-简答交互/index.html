@@ -3,14 +3,19 @@
 <head>
   <meta charset="utf-8">
   
-  <title>越今朝的博客</title>
+  <title>从零开始写DBMS:(一) 简单交互 | 越今朝的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="越今朝的博客">
-<meta property="og:url" content="http://songrui625.github.io/index.html">
+  <meta name="description" content="读取——求值——输出在控制台中我们可以通过如下命令连接到mysql 12345678910111213PS C:\Users\ww142&gt; mysql -u root -pEnter password: ******Welcome to the MySQL monitor.  Commands end with ; or \g.Your MySQL connection id is 8Ser">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从零开始写DBMS:(一) 简单交互">
+<meta property="og:url" content="http://songrui625.github.io/2020/11/02/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99DBMS-%E4%B8%80-%E7%AE%80%E7%AD%94%E4%BA%A4%E4%BA%92/index.html">
 <meta property="og:site_name" content="越今朝的博客">
+<meta property="og:description" content="读取——求值——输出在控制台中我们可以通过如下命令连接到mysql 12345678910111213PS C:\Users\ww142&gt; mysql -u root -pEnter password: ******Welcome to the MySQL monitor.  Commands end with ; or \g.Your MySQL connection id is 8Ser">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-11-02T02:33:10.000Z">
+<meta property="article:modified_time" content="2020-11-02T03:06:26.557Z">
 <meta property="article:author" content="越今朝">
+<meta property="article:tag" content="sql">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternate" href="/atom.xml" title="越今朝的博客" type="application/atom+xml">
@@ -66,9 +71,7 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-从零开始写DBMS-一-简答交互" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-从零开始写DBMS-一-简答交互" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2020/11/02/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99DBMS-%E4%B8%80-%E7%AE%80%E7%AD%94%E4%BA%A4%E4%BA%92/" class="article-date">
   <time datetime="2020-11-02T02:33:10.000Z" itemprop="datePublished">2020-11-02</time>
@@ -81,8 +84,8 @@
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/11/02/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99DBMS-%E4%B8%80-%E7%AE%80%E7%AD%94%E4%BA%A4%E4%BA%92/">从零开始写DBMS:(一) 简单交互</a>
+    <h1 class="article-title" itemprop="name">
+      从零开始写DBMS:(一) 简单交互
     </h1>
   
 
@@ -130,281 +133,76 @@
     </footer>
   </div>
   
-</article>
+    
  
+<script src="/jquery/jquery.min.js"></script>
 
-
-  
-    <article id="post-从0开始写DBMS" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2020/10/30/%E4%BB%8E0%E5%BC%80%E5%A7%8B%E5%86%99DBMS/" class="article-date">
-  <time datetime="2020-10-30T01:18:14.000Z" itemprop="datePublished">2020-10-30</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/10/30/%E4%BB%8E0%E5%BC%80%E5%A7%8B%E5%86%99DBMS/">从零开始写DBMS:绪论</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>最近开始了数据库这门课，虽然讲了一大堆概念，但我对数据库的底层的概念、运作始终是模糊不清。  </p>
-<p>所以想从零写一个tiny的关系型数据库管理系统，来检验自己对数据库这门课的学习成果。</p>
-        
-          <p class="article-more-link">
-            <a href="/2020/10/30/%E4%BB%8E0%E5%BC%80%E5%A7%8B%E5%86%99DBMS/#more">继续阅读全文 »</a>
-          </p>
-        
-      
+  <div id="random_posts">
+    <h2>Recommended Posts</h2>
+    <div class="random_posts_ul">
+      <script>
+          var random_count =4
+          var site = {BASE_URI:'/'};
+          function load_random_posts(obj) {
+              var arr=site.posts;
+              if (!obj) return;
+              // var count = $(obj).attr('data-count') || 6;
+              for (var i, tmp, n = arr.length; n; i = Math.floor(Math.random() * n), tmp = arr[--n], arr[n] = arr[i], arr[i] = tmp);
+              arr = arr.slice(0, random_count);
+              var html = '<ul>';
+            
+              for(var j=0;j<arr.length;j++){
+                var item=arr[j];
+                html += '<li><strong>' + 
+                item.date + ':&nbsp;&nbsp;<a href="' + (site.BASE_URI+item.uri) + '">' + 
+                (item.title || item.uri) + '</a></strong>';
+                if(item.excerpt){
+                  html +='<div class="post-excerpt">'+item.excerpt+'</div>';
+                }
+                html +='</li>';
+                
+              }
+              $(obj).html(html + '</ul>');
+          }
+          $('.random_posts_ul').each(function () {
+              var c = this;
+              if (!site.posts || !site.posts.length){
+                  $.getJSON(site.BASE_URI + 'js/posts.js',function(json){site.posts = json;load_random_posts(c)});
+              } 
+               else{
+                load_random_posts(c);
+              }
+          });
+      </script>
     </div>
-    <footer class="article-footer">
-      <a data-url="http://songrui625.github.io/2020/10/30/%E4%BB%8E0%E5%BC%80%E5%A7%8B%E5%86%99DBMS/" data-id="ckgvl2ipu0000fcu94haa1bbj" class="article-share-link">Share</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/sql/" rel="tag">sql</a></li></ul>
-
-    </footer>
   </div>
+
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2020/10/30/%E4%BB%8E0%E5%BC%80%E5%A7%8B%E5%86%99DBMS/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">从零开始写DBMS:绪论</div>
+    </a>
+  
+</nav>
+
   
 </article>
  
-
-
-  
-    <article id="post-聊聊Servlet-三" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/" class="article-date">
-  <time datetime="2020-08-14T13:18:21.000Z" itemprop="datePublished">2020-08-14</time>
-</a>
+     
+  <div class="comments" id="comments">
     
+     
+       
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+       
+      
+      
   </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/">聊聊Servlet(三)：HttpServletRequest</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>HttpServletRequest原理与应用</p>
-        
-          <p class="article-more-link">
-            <a href="/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/#more">继续阅读全文 »</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://songrui625.github.io/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/" data-id="ckduaq86c0000h4u9dxcyeo4b" class="article-share-link">Share</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/javaweb/" rel="tag">javaweb</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
  
-
-
-  
-    <article id="post-聊聊Servlet-二" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/" class="article-date">
-  <time datetime="2020-08-08T13:25:32.000Z" itemprop="datePublished">2020-08-08</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/">聊聊Servlet(二)：HttpRequestServlet</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>在以前的实际业务过程中，都不会采用实现Servlet接口来创建一个Servlet，而是选择继承HttpServlet类。</p>
-        
-          <p class="article-more-link">
-            <a href="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/#more">继续阅读全文 »</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://songrui625.github.io/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/" data-id="ckdqos0tj0000wcu902oee4ob" class="article-share-link">Share</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/javaweb/" rel="tag">javaweb</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
- 
-
-
-  
-    <article id="post-技术应该怎么学" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2020/07/30/%E6%8A%80%E6%9C%AF%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E5%AD%A6/" class="article-date">
-  <time datetime="2020-07-30T14:04:09.000Z" itemprop="datePublished">2020-07-30</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/07/30/%E6%8A%80%E6%9C%AF%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E5%AD%A6/">技术应该怎么学</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>你是否喜欢遇到一门新技术就先去买一本书、就去找视频。这篇文章想介绍下怎么学习一门快速了解并学习一门新的技术。</p>
-        
-          <p class="article-more-link">
-            <a href="/2020/07/30/%E6%8A%80%E6%9C%AF%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E5%AD%A6/#more">继续阅读全文 »</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://songrui625.github.io/2020/07/30/%E6%8A%80%E6%9C%AF%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E5%AD%A6/" data-id="ckd9lpuf20000zgu93n9xfqfa" class="article-share-link">Share</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%8F%90%E5%8D%87/" rel="tag">提升</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
- 
-
-
-  
-    <article id="post-Java注解的原理与应用" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2020/07/25/Java%E6%B3%A8%E8%A7%A3%E7%9A%84%E5%8E%9F%E7%90%86%E4%B8%8E%E5%BA%94%E7%94%A8/" class="article-date">
-  <time datetime="2020-07-25T09:42:14.000Z" itemprop="datePublished">2020-07-25</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/07/25/Java%E6%B3%A8%E8%A7%A3%E7%9A%84%E5%8E%9F%E7%90%86%E4%B8%8E%E5%BA%94%E7%94%A8/">Java注解的原理与应用</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Java注解是在Spring学习中是十分常见的，相信大家对@Autowired、@Controller这些注解都不陌生，本文就来介绍Java注解的原理以及应用。</p>
-        
-          <p class="article-more-link">
-            <a href="/2020/07/25/Java%E6%B3%A8%E8%A7%A3%E7%9A%84%E5%8E%9F%E7%90%86%E4%B8%8E%E5%BA%94%E7%94%A8/#more">继续阅读全文 »</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://songrui625.github.io/2020/07/25/Java%E6%B3%A8%E8%A7%A3%E7%9A%84%E5%8E%9F%E7%90%86%E4%B8%8E%E5%BA%94%E7%94%A8/" data-id="ckd1m9u7b00007gu9ckyh3sk0" class="article-share-link">Share</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/" rel="tag">Java</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
- 
-
-
-  
-    <article id="post-聊聊Servlet" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2020/07/20/%E8%81%8A%E8%81%8AServlet/" class="article-date">
-  <time datetime="2020-07-20T10:26:18.000Z" itemprop="datePublished">2020-07-20</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/07/20/%E8%81%8A%E8%81%8AServlet/">聊聊Servlet(一)</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>聊一聊Java程序员开发中不得不接触的Servlet</p>
-        
-          <p class="article-more-link">
-            <a href="/2020/07/20/%E8%81%8A%E8%81%8AServlet/#more">继续阅读全文 »</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://songrui625.github.io/2020/07/20/%E8%81%8A%E8%81%8AServlet/" data-id="ckczpvlgv0000jcu9600k4oy3" class="article-share-link">Share</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Javaweb-Servlet/" rel="tag">Javaweb Servlet</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
- 
-
-
   
 
 </section>
@@ -412,99 +210,32 @@
     <aside id="sidebar">
   
     
-  <div class="widget-wrap">
-     
-        <h3 class="follow-title ">Follow me</h3>
-     
-    <div class="widget follow">
+
+  
+    
+    <div class="widget-wrap">
+    
+      <div class="widget" id="toc-widget-fixed">
       
-              <a class="github" aria-hidden="true" href="https://github.com/songrui625" target="_blank" title="Github"></a>
-      
-      
-      
-              <a class="zhihu" aria-hidden="true"  href="http://www.zhihu.com/people/song-rui-29" target="_blank" title="知乎"></a>
-      
-      
-            <a class="email" aria-hidden="true"  href="mailto:1029229159@qq.com" target="_blank" title="邮箱"></a>
-      
+        <strong class="toc-title">Content</strong>
+        <div class="toc-widget-list">
+              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#读取——求值——输出"><span class="toc-number">1.</span> <span class="toc-text">读取——求值——输出</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实现简单的交互"><span class="toc-number">2.</span> <span class="toc-text">实现简单的交互</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#运行程序查看结果"><span class="toc-number">3.</span> <span class="toc-text">运行程序查看结果</span></a></li></ol>
+          </div>
+      </div>
     </div>
-  </div>
 
+  
+    
 
   
     
   
     
+  
+    
 
   
     
-  <div class="widget-wrap">
-    <h3 class="widget-title tagcloud">Tag Cloud</h3>
-    <div class="widget tagcloud">
-      <a href="/tags/Java/" style="font-size: 14px;">Java</a> <a href="/tags/Javaweb-Servlet/" style="font-size: 14px;">Javaweb Servlet</a> <a href="/tags/javaweb/" style="font-size: 25px;">javaweb</a> <a href="/tags/sql/" style="font-size: 25px;">sql</a> <a href="/tags/%E6%8F%90%E5%8D%87/" style="font-size: 14px;">提升</a>
-    </div>
-  </div>
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title recent-posts">Recent Posts</h3>
-    <div class="widget">
-      <ul>
-        
-          <li>
-            <a href="/2020/11/02/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99DBMS-%E4%B8%80-%E7%AE%80%E7%AD%94%E4%BA%A4%E4%BA%92/">从零开始写DBMS:(一) 简单交互</a>
-          </li>
-        
-          <li>
-            <a href="/2020/10/30/%E4%BB%8E0%E5%BC%80%E5%A7%8B%E5%86%99DBMS/">从零开始写DBMS:绪论</a>
-          </li>
-        
-          <li>
-            <a href="/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/">聊聊Servlet(三)：HttpServletRequest</a>
-          </li>
-        
-          <li>
-            <a href="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/">聊聊Servlet(二)：HttpRequestServlet</a>
-          </li>
-        
-          <li>
-            <a href="/2020/07/30/%E6%8A%80%E6%9C%AF%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E5%AD%A6/">技术应该怎么学</a>
-          </li>
-        
-      </ul>
-    </div>
-  </div>
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title archive">Archives</h3>
-    <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/11/">November 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/10/">October 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/08/">August 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li></ul>
-    </div>
-  </div>
-
-
-  
-    
-<div class="widget-wrap">
-    <h3 class="widget-title">Links</h3>
-    <div class="widget">
-        <ul>
-            
-            <li>
-                <a href="http://blog.giscafer.com" target="_blank" rel="noopener">giscafer&#39;s blog</a>
-            </li>
-            
-            <li>
-                <a href="http://www.gis520.com" target="_blank" rel="noopener">GIS520社区</a>
-            </li>
-            
-        </ul>
-    </div>
-</div>
-
   
 </aside>
 
