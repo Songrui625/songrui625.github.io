@@ -90,36 +90,12 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <!-- Table of Contents -->
+        <p>实现简单的交互。</p>
         
-        <a id="more"></a>
-
-<h2 id="读取——求值——输出"><a href="#读取——求值——输出" class="headerlink" title="读取——求值——输出"></a>读取——求值——输出</h2><p>在控制台中我们可以通过如下命令连接到mysql</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">PS C:\Users\ww142&gt; mysql -u root -p</span><br><span class="line">Enter password: ******</span><br><span class="line">Welcome to the MySQL monitor.  Commands end with ; or \g.</span><br><span class="line">Your MySQL connection id is 8</span><br><span class="line">Server version: 8.0.20 MySQL Community Server - GPL</span><br><span class="line"></span><br><span class="line">Copyright (c) 2000, 2020, Oracle and/or its affiliates. All rights reserved.</span><br><span class="line"></span><br><span class="line">Oracle is a registered trademark of Oracle Corporation and/or its</span><br><span class="line">affiliates. Other names may be trademarks of their respective</span><br><span class="line">owners.</span><br><span class="line"></span><br><span class="line">Type <span class="string">'help;'</span> or <span class="string">'\h'</span> <span class="keyword">for</span> <span class="built_in">help</span>. Type <span class="string">'\c'</span> to clear the current input statement.</span><br></pre></td></tr></table></figure>
-
-<p>控制台首先读取一个用户输入的命令，然后进行响应的运算，最后输出相应的值到控制台(返回给用户)  </p>
-<p>接着继续等待下一个命令，不断循环上述操作。  </p>
-<p>我们把这一过程叫做REPL(Read——Evaluate——Print——Loop), REPL在各类语言的解释器中都很常见。  </p>
-<h2 id="实现简单的交互"><a href="#实现简单的交互" class="headerlink" title="实现简单的交互"></a>实现简单的交互</h2><p>我们可以用REPL模拟连接到MySQL这一过程。但是我们最先开始不会模拟登录过程。因为登录过程对应  </p>
-<p>着MySQL连接器(Connector)这一模块，这个模块比较复杂。简单起见我们默认已经连接到数据库，并进行  </p>
-<p>相应的命令处理。我们本篇会进行最简单的退出处理：如果接收到了一个quit命令或者exit命令，则退出程序。</p>
-<p>之后的章节，我们会处理更多的命令。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Client</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Scanner scanner = <span class="keyword">new</span> Scanner(System.in);</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String inputBuffer;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">            printPrompt();</span><br><span class="line">            inputBuffer = readLine();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (<span class="string">"exit"</span>.equals(inputBuffer) || <span class="string">"quit"</span>.equals(inputBuffer)) &#123;</span><br><span class="line">                System.exit(<span class="number">0</span>);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                System.out.println(<span class="string">"Unknown Command."</span>);</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>我们的主类中，有一个Scanner对象，用来读取用户的输入。由于要多次的使用到，避免频繁的创建对象，所以  </p>
-<p>把它设置为一个类成员变量，并且我们希望这个成员变量能被多个对象共用，所以它是一个静态的,inputBuffer同理。  </p>
-<p>我们会用到一个<strong>printPrompt()</strong>方法来打印提示，还有<strong>readLine(</strong>)方法来读取用户输入的一行命令。它们的代码如下</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printPrompt</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.print(<span class="string">"YjzSQL&gt; "</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title">readLine</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> scanner.nextLine();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>如果用户输入的是<strong>exit命令</strong>或者<strong>quit命令</strong>那我们就退出程序。否则就是一个未知的（不可识别的）命令，继续循环等待命令。</p>
-<h2 id="运行程序查看结果"><a href="#运行程序查看结果" class="headerlink" title="运行程序查看结果"></a>运行程序查看结果</h2><p>我们在Idea中启动主程序进行测试。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">YjzSQL&gt; hello</span><br><span class="line">Unknown Command.</span><br><span class="line">YjzSQL&gt; <span class="built_in">exit</span></span><br><span class="line"></span><br><span class="line">Process finished with <span class="built_in">exit</span> code 0</span><br></pre></td></tr></table></figure>
-
-<p>结果正如我们所设想的那样。  </p>
-<p>下篇将会完成<strong>select语句</strong>以及<strong>insert语句</strong>。</p>
-
+          <p class="article-more-link">
+            <a href="/2020/11/02/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99DBMS-%E4%B8%80-%E7%AE%80%E7%AD%94%E4%BA%A4%E4%BA%92/#more">继续阅读全文 »</a>
+          </p>
+        
       
     </div>
     <footer class="article-footer">
