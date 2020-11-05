@@ -13,7 +13,7 @@
 <meta property="og:description" content="实现简单的交互。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2020-11-02T02:33:10.000Z">
-<meta property="article:modified_time" content="2020-11-02T03:32:46.397Z">
+<meta property="article:modified_time" content="2020-11-05T16:02:35.935Z">
 <meta property="article:author" content="越今朝">
 <meta property="article:tag" content="sql">
 <meta name="twitter:card" content="summary">
@@ -117,12 +117,20 @@
 
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title">readLine</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> scanner.nextLine();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>如果用户输入的是<strong>exit命令</strong>或者<strong>quit命令</strong>那我们就退出程序。否则就是一个未知的（不可识别的）命令，继续循环等待命令。</p>
-<h2 id="运行程序查看结果"><a href="#运行程序查看结果" class="headerlink" title="运行程序查看结果"></a>运行程序查看结果</h2><p>我们在Idea中启动主程序进行测试。</p>
+<p>如果用户输入的是<strong>exit命令</strong>或者<strong>quit命令</strong>那我们就退出程序。否则就是一个未知的（不可识别的）命令，继续循环等待命令。  </p>
+<p>我们在Idea中启动主程序进行测试。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">YjzSQL&gt; hello</span><br><span class="line">Unknown Command.</span><br><span class="line">YjzSQL&gt; <span class="built_in">exit</span></span><br><span class="line"></span><br><span class="line">Process finished with <span class="built_in">exit</span> code 0</span><br></pre></td></tr></table></figure>
 
 <p>结果正如我们所设想的那样。  </p>
-<p>下篇将会完成<strong>select语句</strong>以及<strong>insert语句</strong>。</p>
+<p>接着我们来简单处理下SELECT语句和INSERT语句。 当读到insert语句或者select语句时打印一些简单的信息。 </p>
+<p>并对之前的代码进行一些小小的修改，以免我们无法处理非EXIT命令和QUIT命令之外的指令。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (inputBuffer.startsWith(<span class="string">"select"</span>)) &#123;</span><br><span class="line">    System.out.println(<span class="string">"This is what we want to select"</span>);</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (inputBuffer.startsWith(<span class="string">"insert"</span>)) &#123;</span><br><span class="line">    System.out.println(<span class="string">"This is what we want to insert"</span>);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    System.out.println(<span class="string">"Unknown command."</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="运行程序测试结果"><a href="#运行程序测试结果" class="headerlink" title="运行程序测试结果"></a>运行程序测试结果</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">YjzSQL&gt; hello</span><br><span class="line">Unknown <span class="built_in">command</span>.</span><br><span class="line">YjzSQL&gt; insert 1 songrui 20</span><br><span class="line">This is what we want to insert</span><br><span class="line">YjzSQL&gt; select</span><br><span class="line">This is what we want to select</span><br><span class="line">YjzSQL&gt; <span class="built_in">exit</span></span><br><span class="line"></span><br><span class="line">Process finished with <span class="built_in">exit</span> code 0</span><br></pre></td></tr></table></figure>
+
+<p>和我们假设的结果相符，下一章将完成SELECT语句和INSERT语句的解析实现。</p>
 
       
     </div>
@@ -222,7 +230,7 @@
       
         <strong class="toc-title">Content</strong>
         <div class="toc-widget-list">
-              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#读取——求值——输出"><span class="toc-number">1.</span> <span class="toc-text">读取——求值——输出</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实现简单的交互"><span class="toc-number">2.</span> <span class="toc-text">实现简单的交互</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#运行程序查看结果"><span class="toc-number">3.</span> <span class="toc-text">运行程序查看结果</span></a></li></ol>
+              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#读取——求值——输出"><span class="toc-number">1.</span> <span class="toc-text">读取——求值——输出</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实现简单的交互"><span class="toc-number">2.</span> <span class="toc-text">实现简单的交互</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#运行程序测试结果"><span class="toc-number">3.</span> <span class="toc-text">运行程序测试结果</span></a></li></ol>
           </div>
       </div>
     </div>
