@@ -3,14 +3,19 @@
 <head>
   <meta charset="utf-8">
   
-  <title>越今朝的博客</title>
+  <title>xv6-6.828-lab1-part2:The Boot Loader | 越今朝的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="越今朝的博客">
-<meta property="og:url" content="http://songrui625.github.io/index.html">
+  <meta name="description" content="Part2:(Boot Loader)引导加载器这个部分的主要内容是要了解内核是如何被引导的，大体过程如下：    CPU先运行BIOS，控制权交到了BIOS。 BIOS将引导扇区装载进内存，控制权交给引导加载器。 引导加载器将内核装载进内存，控制权交给内核。  引导加载器的两个作用：   1、将CPU从实模式转换到32位的保护模式，因为只有在保护模式下软件才可以访问在CPU物理地址空间所有超过1">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xv6-6.828-lab1-part2:The Boot Loader">
+<meta property="og:url" content="http://songrui625.github.io/2020/12/10/xv6-6-828-lab1-part2-The-Boot-Loader/index.html">
 <meta property="og:site_name" content="越今朝的博客">
+<meta property="og:description" content="Part2:(Boot Loader)引导加载器这个部分的主要内容是要了解内核是如何被引导的，大体过程如下：    CPU先运行BIOS，控制权交到了BIOS。 BIOS将引导扇区装载进内存，控制权交给引导加载器。 引导加载器将内核装载进内存，控制权交给内核。  引导加载器的两个作用：   1、将CPU从实模式转换到32位的保护模式，因为只有在保护模式下软件才可以访问在CPU物理地址空间所有超过1">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-12-10T12:29:36.000Z">
+<meta property="article:modified_time" content="2020-12-11T15:56:11.970Z">
 <meta property="article:author" content="越今朝">
+<meta property="article:tag" content="xv6">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternate" href="/atom.xml" title="越今朝的博客" type="application/atom+xml">
@@ -66,9 +71,7 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-xv6-6-828-lab1-part2-The-Boot-Loader" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-xv6-6-828-lab1-part2-The-Boot-Loader" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2020/12/10/xv6-6-828-lab1-part2-The-Boot-Loader/" class="article-date">
   <time datetime="2020-12-10T12:29:36.000Z" itemprop="datePublished">2020-12-10</time>
@@ -81,8 +84,8 @@
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/12/10/xv6-6-828-lab1-part2-The-Boot-Loader/">xv6-6.828-lab1-part2:The Boot Loader</a>
+    <h1 class="article-title" itemprop="name">
+      xv6-6.828-lab1-part2:The Boot Loader
     </h1>
   
 
@@ -191,397 +194,76 @@
     </footer>
   </div>
   
-</article>
+    
  
+<script src="/jquery/jquery.min.js"></script>
 
-
-  
-    <article id="post-xv6-6-828-lab1-part1-PC-Bootstrap" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2020/12/10/xv6-6-828-lab1-part1-PC-Bootstrap/" class="article-date">
-  <time datetime="2020-12-10T04:50:03.000Z" itemprop="datePublished">2020-12-10</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/12/10/xv6-6-828-lab1-part1-PC-Bootstrap/">xv6-6.828-lab1-part1:PC Bootstrap</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <!-- Table of Contents -->
-        
-        <h2 id="Part1：引导PC"><a href="#Part1：引导PC" class="headerlink" title="Part1：引导PC"></a>Part1：引导PC</h2><p>这个部分的主要任务就是使用qemu模拟器引导JOS，也就是将操作系统内核加载到内存中，启动它。</p>
-<h3 id="启程：x86汇编"><a href="#启程：x86汇编" class="headerlink" title="启程：x86汇编"></a>启程：x86汇编</h3><p>熟悉x86汇编的话完全可以略过这一部分。如果想学习基本的x86汇编，讲义也给出了一个比较不错的入门文章：<a href="http://www.delorie.com/djgpp/doc/brennan/brennan_att_inline_djgpp.html" target="_blank" rel="noopener">Brennan’s Guide to inline Assembly</a>.</p>
-<h3 id="模拟x86"><a href="#模拟x86" class="headerlink" title="模拟x86"></a>模拟x86</h3><p> 进入到lab文件夹，进行编译<em>make</em>.  </p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">linux% <span class="built_in">cd</span> lab</span><br><span class="line">linux% make</span><br><span class="line">+ as kern/entry.S</span><br><span class="line">+ cc kern/entrypgdir.c</span><br><span class="line">+ cc kern/init.c</span><br><span class="line">+ cc kern/console.c</span><br><span class="line">+ cc kern/monitor.c</span><br><span class="line">+ cc kern/printf.c</span><br><span class="line">+ cc kern/kdebug.c</span><br><span class="line">+ cc lib/printfmt.c</span><br><span class="line">+ cc lib/readline.c</span><br><span class="line">+ cc lib/string.c</span><br><span class="line">+ ld obj/kern/kernel</span><br><span class="line">+ as boot/boot.S</span><br><span class="line">+ cc -Os boot/main.c</span><br><span class="line">+ ld boot/boot</span><br><span class="line">boot block is 380 bytes (max 510)</span><br><span class="line">+ mk obj/kern/kernel.img</span><br></pre></td></tr></table></figure>
-
-<p>编译期间可能会出现一系列的错误。关于这些错误的解决方案可以参考这个大佬的环境搭建教程：<a href="https://www.cnblogs.com/gatsby123/p/9746193.html" target="_blank" rel="noopener">6.828-JOS-环境搭建</a></p>
-<p>tips:这个编译需要提前安装好qemu模拟器，关于qemu模拟器的安装可以参考上面的大佬的环境搭建。  </p>
-<p>如果你编译过程中出现了”undefined reference to `__udivdi3’”错误，是因为你的linux系统是64位的，那么可能需要32位库才能编译成功。  </p>
-<p>终端运行如下命令：  </p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install gcc-multilib</span><br></pre></td></tr></table></figure>
-
-<p>编译成功之后运行如下命令：<em>make qemu</em>如果成功将会看到如下提示。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">$ sudo make qemu</span><br><span class="line">qemu-system-i386 -drive file=obj/kern/kernel.img,index=0,media=disk,format=raw -serial mon:stdio -gdb tcp::25000 -D qemu.log </span><br><span class="line">VNC server running on `127.0.0.1:5900<span class="string">'</span></span><br><span class="line"><span class="string">6828 decimal is XXX octal!</span></span><br><span class="line"><span class="string">entering test_backtrace 5</span></span><br><span class="line"><span class="string">entering test_backtrace 4</span></span><br><span class="line"><span class="string">entering test_backtrace 3</span></span><br><span class="line"><span class="string">entering test_backtrace 2</span></span><br><span class="line"><span class="string">entering test_backtrace 1</span></span><br><span class="line"><span class="string">entering test_backtrace 0</span></span><br><span class="line"><span class="string">leaving test_backtrace 0</span></span><br><span class="line"><span class="string">leaving test_backtrace 1</span></span><br><span class="line"><span class="string">leaving test_backtrace 2</span></span><br><span class="line"><span class="string">leaving test_backtrace 3</span></span><br><span class="line"><span class="string">leaving test_backtrace 4</span></span><br><span class="line"><span class="string">leaving test_backtrace 5</span></span><br><span class="line"><span class="string">Welcome to the JOS kernel monitor!</span></span><br><span class="line"><span class="string">Type '</span><span class="built_in">help</span><span class="string">' for a list of commands.</span></span><br><span class="line"><span class="string">K&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>这样我们就成功的将内核从硬盘引导起来了。</p>
-<h3 id="The-ROM-BIOS"><a href="#The-ROM-BIOS" class="headerlink" title="The ROM BIOS"></a>The ROM BIOS</h3><p>我们在linux打开两个终端，进入lab文件夹。第一个运行<em>make qemu-gdb</em>命令，显示如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ sudo make qemu-gdb</span><br><span class="line">***</span><br><span class="line">*** Now run <span class="string">'make gdb'</span>.</span><br><span class="line">***</span><br><span class="line">qemu-system-i386 -drive file=obj/kern/kernel.img,index=0,media=disk,format=raw -serial mon:stdio -gdb tcp::25000 -D qemu.log  -S</span><br><span class="line">VNC server running on `127.0.0.1:5900<span class="string">'</span></span><br></pre></td></tr></table></figure>
-
-<p>第二个运行 <em>make gdb</em>命令，显示如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">$ sudo make gdb</span><br><span class="line">gdb -n -x .gdbinit</span><br><span class="line">GNU gdb (Ubuntu 9.1-0ubuntu1) 9.1</span><br><span class="line">Copyright (C) 2020 Free Software Foundation, Inc.</span><br><span class="line">License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl.html&gt;</span><br><span class="line">This is free software: you are free to change and redistribute it.</span><br><span class="line">There is NO WARRANTY, to the extent permitted by law.</span><br><span class="line">Type <span class="string">"show copying"</span> and <span class="string">"show warranty"</span> <span class="keyword">for</span> details.</span><br><span class="line">This GDB was configured as <span class="string">"x86_64-linux-gnu"</span>.</span><br><span class="line">Type <span class="string">"show configuration"</span> <span class="keyword">for</span> configuration details.</span><br><span class="line">For bug reporting instructions, please see:</span><br><span class="line">&lt;http://www.gnu.org/software/gdb/bugs/&gt;.</span><br><span class="line">Find the GDB manual and other documentation resources online at:</span><br><span class="line">    &lt;http://www.gnu.org/software/gdb/documentation/&gt;.</span><br><span class="line"></span><br><span class="line">For <span class="built_in">help</span>, <span class="built_in">type</span> <span class="string">"help"</span>.</span><br><span class="line">Type <span class="string">"apropos word"</span> to search <span class="keyword">for</span> commands related to <span class="string">"word"</span>.</span><br><span class="line">+ target remote localhost:25000</span><br><span class="line">warning: No executable has been specified and target does not support</span><br><span class="line">determining executable automatically.  Try using the <span class="string">"file"</span> <span class="built_in">command</span>.</span><br><span class="line">warning: A handler <span class="keyword">for</span> the OS ABI <span class="string">"GNU/Linux"</span> is not built into this configuration</span><br><span class="line">of GDB.  Attempting to <span class="built_in">continue</span> with the default i8086 settings.</span><br><span class="line"></span><br><span class="line">The target architecture is assumed to be i8086</span><br><span class="line">[f000:fff0]    0xffff0: ljmp   <span class="variable">$0xf000</span>,<span class="variable">$0xe05b</span></span><br><span class="line">0x0000fff0 <span class="keyword">in</span> ?? ()</span><br></pre></td></tr></table></figure>
-
-<p>我们重点关注这一行:</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[f000:fff0]    0xffff0: ljmp   <span class="variable">$0xf000</span>,<span class="variable">$0xe05b</span></span><br></pre></td></tr></table></figure>
-
-<p>[f000:fff0]就是(cs:ip)的值称为逻辑地址，它是由段地址：偏移地址表示的，而0xffff0也就是在内存中实际的物理地址，它的值是由段地址 * 16 + 偏移地址得来的，也就是 f000 * 16 + fff0 = f0000 + fff0 = ffff0.  </p>
-<p>为什么是*16呢？这是因为8086、8088CPU的寄存器是16位的，而地址线有20线，16位线的地址如何拼接成20位地址呢？结论就是将段寄存器中的值左移4位，形成20位段基地址，然后和16位偏移地址相加，就得到了物理地址。  </p>
-<p>回到实际的物理地址：0xffff0,这是BIOS（0x100000）结束前的16个字节。也就是说，我们现在在运行BIOS，因为当前指令的地址存放的是BIOS的代码和数据，当BIOS运行时，它会创建一个中断描述符表以及初始化不同的设备比如VGA显示，这也是我们能在QEMU窗口看到“Starting SeaBIOS”的这条消息的原因。  </p>
-<p>BIOS会初始化PCI总线和所知的所有重要设备后，它将搜索可引导的设备比如软盘、硬盘驱动器，CD-ROM。最终，当他找到一个可引导磁盘时，会从磁盘读取引导加载程序并将控制权转移给该引导加载程序。  </p>
-<p>到此我们这一部分告一段落，下一部分就是关于引导加载程序如何引导内核。</p>
-
-      
+  <div id="random_posts">
+    <h2>Recommended Posts</h2>
+    <div class="random_posts_ul">
+      <script>
+          var random_count =4
+          var site = {BASE_URI:'/'};
+          function load_random_posts(obj) {
+              var arr=site.posts;
+              if (!obj) return;
+              // var count = $(obj).attr('data-count') || 6;
+              for (var i, tmp, n = arr.length; n; i = Math.floor(Math.random() * n), tmp = arr[--n], arr[n] = arr[i], arr[i] = tmp);
+              arr = arr.slice(0, random_count);
+              var html = '<ul>';
+            
+              for(var j=0;j<arr.length;j++){
+                var item=arr[j];
+                html += '<li><strong>' + 
+                item.date + ':&nbsp;&nbsp;<a href="' + (site.BASE_URI+item.uri) + '">' + 
+                (item.title || item.uri) + '</a></strong>';
+                if(item.excerpt){
+                  html +='<div class="post-excerpt">'+item.excerpt+'</div>';
+                }
+                html +='</li>';
+                
+              }
+              $(obj).html(html + '</ul>');
+          }
+          $('.random_posts_ul').each(function () {
+              var c = this;
+              if (!site.posts || !site.posts.length){
+                  $.getJSON(site.BASE_URI + 'js/posts.js',function(json){site.posts = json;load_random_posts(c)});
+              } 
+               else{
+                load_random_posts(c);
+              }
+          });
+      </script>
     </div>
-    <footer class="article-footer">
-      <a data-url="http://songrui625.github.io/2020/12/10/xv6-6-828-lab1-part1-PC-Bootstrap/" data-id="ckiisltrb0000n8u99pwf5j4a" class="article-share-link">Share</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/xv6/" rel="tag">xv6</a></li></ul>
-
-    </footer>
   </div>
+
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2020/12/10/xv6-6-828-lab1-part1-PC-Bootstrap/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">xv6-6.828-lab1-part1:PC Bootstrap</div>
+    </a>
+  
+</nav>
+
   
 </article>
  
-
-
-  
-    <article id="post-从零开始写DBMS-一-简答交互" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2020/11/02/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99DBMS-%E4%B8%80-%E7%AE%80%E7%AD%94%E4%BA%A4%E4%BA%92/" class="article-date">
-  <time datetime="2020-11-02T02:33:10.000Z" itemprop="datePublished">2020-11-02</time>
-</a>
+     
+  <div class="comments" id="comments">
     
+     
+       
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+       
+      
+      
   </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/11/02/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99DBMS-%E4%B8%80-%E7%AE%80%E7%AD%94%E4%BA%A4%E4%BA%92/">从零开始写DBMS:(一) 简单交互</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>实现简单的交互。</p>
-        
-          <p class="article-more-link">
-            <a href="/2020/11/02/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99DBMS-%E4%B8%80-%E7%AE%80%E7%AD%94%E4%BA%A4%E4%BA%92/#more">继续阅读全文 »</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://songrui625.github.io/2020/11/02/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99DBMS-%E4%B8%80-%E7%AE%80%E7%AD%94%E4%BA%A4%E4%BA%92/" data-id="ckgzypbdp0000ccu9ad9x5u9z" class="article-share-link">Share</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/sql/" rel="tag">sql</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
  
-
-
-  
-    <article id="post-从0开始写DBMS" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2020/10/30/%E4%BB%8E0%E5%BC%80%E5%A7%8B%E5%86%99DBMS/" class="article-date">
-  <time datetime="2020-10-30T01:18:14.000Z" itemprop="datePublished">2020-10-30</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/10/30/%E4%BB%8E0%E5%BC%80%E5%A7%8B%E5%86%99DBMS/">从零开始写DBMS:绪论</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>最近开始了数据库这门课，虽然讲了一大堆概念，但我对数据库的底层的概念、运作始终是模糊不清。  </p>
-<p>所以想从零写一个tiny的关系型数据库管理系统，来检验自己对数据库这门课的学习成果。</p>
-        
-          <p class="article-more-link">
-            <a href="/2020/10/30/%E4%BB%8E0%E5%BC%80%E5%A7%8B%E5%86%99DBMS/#more">继续阅读全文 »</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://songrui625.github.io/2020/10/30/%E4%BB%8E0%E5%BC%80%E5%A7%8B%E5%86%99DBMS/" data-id="ckgvl2ipu0000fcu94haa1bbj" class="article-share-link">Share</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/sql/" rel="tag">sql</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
- 
-
-
-  
-    <article id="post-聊聊Servlet-三" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/" class="article-date">
-  <time datetime="2020-08-14T13:18:21.000Z" itemprop="datePublished">2020-08-14</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/">聊聊Servlet(三)：HttpServletRequest</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>HttpServletRequest原理与应用</p>
-        
-          <p class="article-more-link">
-            <a href="/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/#more">继续阅读全文 »</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://songrui625.github.io/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/" data-id="ckduaq86c0000h4u9dxcyeo4b" class="article-share-link">Share</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/javaweb/" rel="tag">javaweb</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
- 
-
-
-  
-    <article id="post-聊聊Servlet-二" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/" class="article-date">
-  <time datetime="2020-08-08T13:25:32.000Z" itemprop="datePublished">2020-08-08</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/">聊聊Servlet(二)：HttpRequestServlet</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>在以前的实际业务过程中，都不会采用实现Servlet接口来创建一个Servlet，而是选择继承HttpServlet类。</p>
-        
-          <p class="article-more-link">
-            <a href="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/#more">继续阅读全文 »</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://songrui625.github.io/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/" data-id="ckdqos0tj0000wcu902oee4ob" class="article-share-link">Share</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/javaweb/" rel="tag">javaweb</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
- 
-
-
-  
-    <article id="post-技术应该怎么学" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2020/07/30/%E6%8A%80%E6%9C%AF%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E5%AD%A6/" class="article-date">
-  <time datetime="2020-07-30T14:04:09.000Z" itemprop="datePublished">2020-07-30</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/07/30/%E6%8A%80%E6%9C%AF%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E5%AD%A6/">技术应该怎么学</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>你是否喜欢遇到一门新技术就先去买一本书、就去找视频。这篇文章想介绍下怎么学习一门快速了解并学习一门新的技术。</p>
-        
-          <p class="article-more-link">
-            <a href="/2020/07/30/%E6%8A%80%E6%9C%AF%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E5%AD%A6/#more">继续阅读全文 »</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://songrui625.github.io/2020/07/30/%E6%8A%80%E6%9C%AF%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E5%AD%A6/" data-id="ckd9lpuf20000zgu93n9xfqfa" class="article-share-link">Share</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%8F%90%E5%8D%87/" rel="tag">提升</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
- 
-
-
-  
-    <article id="post-Java注解的原理与应用" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2020/07/25/Java%E6%B3%A8%E8%A7%A3%E7%9A%84%E5%8E%9F%E7%90%86%E4%B8%8E%E5%BA%94%E7%94%A8/" class="article-date">
-  <time datetime="2020-07-25T09:42:14.000Z" itemprop="datePublished">2020-07-25</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/07/25/Java%E6%B3%A8%E8%A7%A3%E7%9A%84%E5%8E%9F%E7%90%86%E4%B8%8E%E5%BA%94%E7%94%A8/">Java注解的原理与应用</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Java注解是在Spring学习中是十分常见的，相信大家对@Autowired、@Controller这些注解都不陌生，本文就来介绍Java注解的原理以及应用。</p>
-        
-          <p class="article-more-link">
-            <a href="/2020/07/25/Java%E6%B3%A8%E8%A7%A3%E7%9A%84%E5%8E%9F%E7%90%86%E4%B8%8E%E5%BA%94%E7%94%A8/#more">继续阅读全文 »</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://songrui625.github.io/2020/07/25/Java%E6%B3%A8%E8%A7%A3%E7%9A%84%E5%8E%9F%E7%90%86%E4%B8%8E%E5%BA%94%E7%94%A8/" data-id="ckd1m9u7b00007gu9ckyh3sk0" class="article-share-link">Share</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/" rel="tag">Java</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
- 
-
-
-  
-    <article id="post-聊聊Servlet" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2020/07/20/%E8%81%8A%E8%81%8AServlet/" class="article-date">
-  <time datetime="2020-07-20T10:26:18.000Z" itemprop="datePublished">2020-07-20</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/07/20/%E8%81%8A%E8%81%8AServlet/">聊聊Servlet(一)</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>聊一聊Java程序员开发中不得不接触的Servlet</p>
-        
-          <p class="article-more-link">
-            <a href="/2020/07/20/%E8%81%8A%E8%81%8AServlet/#more">继续阅读全文 »</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://songrui625.github.io/2020/07/20/%E8%81%8A%E8%81%8AServlet/" data-id="ckczpvlgv0000jcu9600k4oy3" class="article-share-link">Share</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Javaweb-Servlet/" rel="tag">Javaweb Servlet</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
- 
-
-
   
 
 </section>
@@ -589,99 +271,32 @@
     <aside id="sidebar">
   
     
-  <div class="widget-wrap">
-     
-        <h3 class="follow-title ">Follow me</h3>
-     
-    <div class="widget follow">
+
+  
+    
+    <div class="widget-wrap">
+    
+      <div class="widget" id="toc-widget-fixed">
       
-              <a class="github" aria-hidden="true" href="https://github.com/songrui625" target="_blank" title="Github"></a>
-      
-      
-      
-              <a class="zhihu" aria-hidden="true"  href="http://www.zhihu.com/people/song-rui-29" target="_blank" title="知乎"></a>
-      
-      
-            <a class="email" aria-hidden="true"  href="mailto:1029229159@qq.com" target="_blank" title="邮箱"></a>
-      
+        <strong class="toc-title">Content</strong>
+        <div class="toc-widget-list">
+              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Part2-Boot-Loader-引导加载器"><span class="toc-number">1.</span> <span class="toc-text">Part2:(Boot Loader)引导加载器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#引导扇区"><span class="toc-number">1.1.</span> <span class="toc-text">引导扇区</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Problem1"><span class="toc-number">1.2.</span> <span class="toc-text">Problem1</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Problem-2"><span class="toc-number">1.3.</span> <span class="toc-text">Problem 2</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Problem3"><span class="toc-number">1.4.</span> <span class="toc-text">Problem3</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#problem4"><span class="toc-number">1.5.</span> <span class="toc-text">problem4</span></a></li></ol></li></ol>
+          </div>
+      </div>
     </div>
-  </div>
 
+  
+    
 
   
     
   
     
+  
+    
 
   
     
-  <div class="widget-wrap">
-    <h3 class="widget-title tagcloud">Tag Cloud</h3>
-    <div class="widget tagcloud">
-      <a href="/tags/Java/" style="font-size: 14px;">Java</a> <a href="/tags/Javaweb-Servlet/" style="font-size: 14px;">Javaweb Servlet</a> <a href="/tags/javaweb/" style="font-size: 25px;">javaweb</a> <a href="/tags/sql/" style="font-size: 25px;">sql</a> <a href="/tags/xv6/" style="font-size: 25px;">xv6</a> <a href="/tags/%E6%8F%90%E5%8D%87/" style="font-size: 14px;">提升</a>
-    </div>
-  </div>
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title recent-posts">Recent Posts</h3>
-    <div class="widget">
-      <ul>
-        
-          <li>
-            <a href="/2020/12/10/xv6-6-828-lab1-part2-The-Boot-Loader/">xv6-6.828-lab1-part2:The Boot Loader</a>
-          </li>
-        
-          <li>
-            <a href="/2020/12/10/xv6-6-828-lab1-part1-PC-Bootstrap/">xv6-6.828-lab1-part1:PC Bootstrap</a>
-          </li>
-        
-          <li>
-            <a href="/2020/11/02/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99DBMS-%E4%B8%80-%E7%AE%80%E7%AD%94%E4%BA%A4%E4%BA%92/">从零开始写DBMS:(一) 简单交互</a>
-          </li>
-        
-          <li>
-            <a href="/2020/10/30/%E4%BB%8E0%E5%BC%80%E5%A7%8B%E5%86%99DBMS/">从零开始写DBMS:绪论</a>
-          </li>
-        
-          <li>
-            <a href="/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/">聊聊Servlet(三)：HttpServletRequest</a>
-          </li>
-        
-      </ul>
-    </div>
-  </div>
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title archive">Archives</h3>
-    <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/12/">December 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/11/">November 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/10/">October 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/08/">August 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li></ul>
-    </div>
-  </div>
-
-
-  
-    
-<div class="widget-wrap">
-    <h3 class="widget-title">Links</h3>
-    <div class="widget">
-        <ul>
-            
-            <li>
-                <a href="http://blog.giscafer.com" target="_blank" rel="noopener">giscafer&#39;s blog</a>
-            </li>
-            
-            <li>
-                <a href="http://www.gis520.com" target="_blank" rel="noopener">GIS520社区</a>
-            </li>
-            
-        </ul>
-    </div>
-</div>
-
   
 </aside>
 
