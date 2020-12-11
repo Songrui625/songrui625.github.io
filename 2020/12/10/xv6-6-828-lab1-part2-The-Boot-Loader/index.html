@@ -13,7 +13,7 @@
 <meta property="og:description" content="Part2:(Boot Loader)引导加载器这个部分的主要内容是要了解内核是如何被引导的，大体过程如下：    CPU先运行BIOS，控制权交到了BIOS。 BIOS将引导扇区装载进内存，控制权交给引导加载器。 引导加载器将内核装载进内存，控制权交给内核。  引导加载器的两个作用：   1、将CPU从实模式转换到32位的保护模式，因为只有在保护模式下软件才可以访问在CPU物理地址空间所有超过1">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2020-12-10T12:29:36.000Z">
-<meta property="article:modified_time" content="2020-12-11T15:56:11.970Z">
+<meta property="article:modified_time" content="2020-12-11T16:58:03.981Z">
 <meta property="article:author" content="越今朝">
 <meta property="article:tag" content="xv6">
 <meta name="twitter:card" content="summary">
@@ -179,8 +179,17 @@
 <p>我来描述一下main.c的任务，读取ELF格式文件 obj/boot/kernel，把每个节和程序头的物理地址都加载到内存中。看下源代码：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ELFHDR		((struct Elf *) 0x10000) <span class="comment">// scratch space 暂存空间</span></span></span><br></pre></td></tr></table></figure>
 
-<p>这就是ELF头所在的地址。</p>
-<p>BIOS把引导扇区加载到内存地址0x7c00处，所以这是引导扇区的加载地址。这也是引导扇区执行的地方，所以这也是它的链接地址。  </p>
+<p>这就是ELF头所在的地址，把他转化为一个指向ELF结构体的指针。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ph = (struct Proghdr *) ((<span class="keyword">uint8_t</span> *) ELFHDR + ELFHDR-&gt;e_phoff);</span><br></pre></td></tr></table></figure>
+
+<p>将ELF头地址加上程序头入口地址就能得到程序头地址，这里利用强制转换成了一个指向程序头结构体的指针。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">eph = ph + ELFHDR-&gt;e_phnum;</span><br></pre></td></tr></table></figure>
+
+<p>这里e_phnum就是程序头的数量，由于每一个程序头都记录了要装载到内存的程序的信息，比如程序所在的地址，要加载到内存的物理地址等等，eph就是最后一个的程序头的地址，这样我们就可以遍历每个程序头，将它们的代码读取到内存的指定位置中。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (; ph &lt; eph; ph++)</span><br><span class="line">	<span class="comment">// p_pa is the load address of this segment (as well</span></span><br><span class="line">	<span class="comment">// as the physical address)</span></span><br><span class="line">	readseg(ph-&gt;p_pa, ph-&gt;p_memsz, ph-&gt;p_offset);</span><br></pre></td></tr></table></figure>
+
+<p>其实就是从kernel中的每个程序头的offset起始地址(ph_offset)开始读取程序段到程序头要加载到内存中的物理地址(ph-&gt;p_pa),大小是ph-&gt;p_memsz个字节，而每次读取程序段过程中又会去读扇区。所以problem4的问题就可以回答了，程序头有多少个条目，就会读取多少次程序段，读程序段的次数乘以每次读扇区的数目也就是读内核所需要的扇区数目。</p>
+<p>内核到此加载完毕。</p>
 
       
     </div>
