@@ -68,6 +68,51 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-xv6-6-828-lab1-part3-The-Kernel" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/12/12/xv6-6-828-lab1-part3-The-Kernel/" class="article-date">
+  <time datetime="2020-12-12T04:20:08.000Z" itemprop="datePublished">2020-12-12</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/12/12/xv6-6-828-lab1-part3-The-Kernel/">xv6-6.828-lab1-part3:The Kernel</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Part3-The-Kernel"><a href="#Part3-The-Kernel" class="headerlink" title="Part3 The Kernel"></a>Part3 The Kernel</h2><p>在这个部分，我们更详细的研究JOS内核（最后还会写一些代码）。与引导加载器一样，内核从一些汇编语言代码开始，这些代码会进行设置，以便C语言代码可以正确执行。</p>
+        
+          <p class="article-more-link">
+            <a href="/2020/12/12/xv6-6-828-lab1-part3-The-Kernel/#more">继续阅读全文 »</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://songrui625.github.io/2020/12/12/xv6-6-828-lab1-part3-The-Kernel/" data-id="ckilfbbj600009cu9exi9dmi5" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/xv6/" rel="tag">xv6</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+ 
+
+
+  
     <article id="post-xv6-6-828-lab1-part2-The-Boot-Loader" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2020/12/10/xv6-6-828-lab1-part2-The-Boot-Loader/" class="article-date">
@@ -90,8 +135,6 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <!-- Table of Contents -->
-        
         <h2 id="Part2-Boot-Loader-引导加载器"><a href="#Part2-Boot-Loader-引导加载器" class="headerlink" title="Part2:(Boot Loader)引导加载器"></a>Part2:(Boot Loader)引导加载器</h2><p>这个部分的主要内容是要了解内核是如何被引导的，大体过程如下：  </p>
 <ol>
 <li>CPU先运行BIOS，控制权交到了BIOS。</li>
@@ -101,93 +144,11 @@
 <p>引导加载器的两个作用：  </p>
 <p>1、将CPU从实模式转换到32位的保护模式，因为只有在保护模式下软件才可以访问在CPU物理地址空间所有超过1MB的内存。  </p>
 <p>2、通过x86特殊的I/O指令用直接访问IDE磁盘设备寄存器从硬盘读取内核。  </p>
-<h3 id="引导扇区"><a href="#引导扇区" class="headerlink" title="引导扇区"></a>引导扇区</h3><p>PC机的软盘和硬盘被划分为<strong>512字节</strong>区域，称为<strong>扇区</strong>，扇区是磁盘的最小传输粒度（单元）：每次读写操作必须是一个或者多个扇区的大小并且要对齐扇区边界。如果磁盘是可引导的，那么第一个扇区就成为<strong>引导扇区</strong>，因为这里是boot loader（引导加载器）代码存放的地方。当BIOS找到可引导的软盘或硬盘，它会装载512字节的引导扇区进内存地址在0x7c00到0x7dff处，然后使用<em>jmp</em>指令设置cs：ip为0000:7c00,转移控制权给boot loader，这些地址是相当随意的，但它们对于PC是固定的和标准化的。  </p>
-<p>现代PC机器已经不再是引导512字节的扇区了而是2048字节，而且BIOS可以从磁盘中加载更大的启动镜像到内存（不止一个扇区），然后把控制权交给它。（权当了解，与内容无太大关系）  </p>
-<p>obj/boot/boot.asm，这是一个由makefile在编译之后创建的反汇编文件，它可以帮助我们轻松的所有引导程序代码在物理内存中的确切位置，而且可以更轻松地跟踪在GDB中逐步引导加载程序发生的情况。同样，obj/kern/kernel.asm包含一个JOS的反汇编文件，也对调试十分有帮助。  </p>
-<p>xv6讲义推荐我们在0x7c00设置一个断点，通过 <em>b</em> *<em>0x7c00</em>指令单步调试一趟，更深入的理解boot loader。</p>
-<h3 id="Problem1"><a href="#Problem1" class="headerlink" title="Problem1"></a>Problem1</h3><p><strong>At what point does the processor start executing 32-bit code? What exactly causes the switch from 16- to 32-bit mode?</strong></p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">The target architecture is assumed to be i8086</span><br><span class="line">[f000:fff0]    0xffff0: ljmp   <span class="variable">$0xf000</span>,<span class="variable">$0xe05b</span></span><br><span class="line">0x0000fff0 <span class="keyword">in</span> ?? ()</span><br><span class="line">+ symbol-file obj/kern/kernel</span><br><span class="line">(gdb) b * 0x7c00</span><br><span class="line">Breakpoint 1 at 0x7c00</span><br><span class="line">(gdb) c</span><br><span class="line">Continuing.</span><br><span class="line">[   0:7c00] =&gt; 0x7c00:  cli    </span><br><span class="line"></span><br><span class="line">Breakpoint 1, 0x00007c00 <span class="keyword">in</span> ?? ()</span><br><span class="line">(gdb) si</span><br><span class="line">[   0:7c01] =&gt; 0x7c01:  cld    </span><br><span class="line">0x00007c01 <span class="keyword">in</span> ?? ()</span><br><span class="line"></span><br><span class="line">......</span><br><span class="line"></span><br><span class="line">(gdb) si</span><br><span class="line">[   0:7c2d] =&gt; 0x7c2d:  ljmp   <span class="variable">$0x8</span>,<span class="variable">$0x7c32</span></span><br><span class="line">0x00007c2d <span class="keyword">in</span> ?? ()</span><br><span class="line">(gdb) si</span><br><span class="line">The target architecture is assumed to be i386</span><br><span class="line">=&gt; 0x7c32:      mov    <span class="variable">$0x10</span>,%ax</span><br><span class="line">0x00007c32 <span class="keyword">in</span> ?? ()</span><br></pre></td></tr></table></figure>
-
-<p>通过 <em>c</em>指令和<em>si</em>指令进行单步调试，显示结果如上。  </p>
-<p>重点关注这一行</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">The target architecture is assumed to be i386</span><br><span class="line">=&gt; 0x7c32:      mov    <span class="variable">$0x10</span>,%ax</span><br></pre></td></tr></table></figure>
-
-<p>这代表我们开始执行32位代码，i386是32位微处理器的统称，这一条显示的上一条指令是</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[   0:7c2d] =&gt; 0x7c2d:  ljmp   <span class="variable">$0x8</span>,<span class="variable">$0x7c32</span></span><br></pre></td></tr></table></figure>
-
-<p>就是这条<em>jmp</em>指令，让我们从16位模式切换到了32位模式，这也回答了Exercise 3的problem 1。  </p>
-<h3 id="Problem-2"><a href="#Problem-2" class="headerlink" title="Problem 2"></a>Problem 2</h3><p><strong>What is the <em>last</em> instruction of the boot loader executed, and what is the <em>first</em> instruction of the kernel it just loaded?</strong></p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">//boot/boot.S</span><br><span class="line"></span><br><span class="line">protcseg:</span><br><span class="line">  <span class="comment"># Set up the protected-mode data segment registers</span></span><br><span class="line">  movw    <span class="variable">$PROT_MODE_DSEG</span>, %ax    <span class="comment"># Our data segment selector</span></span><br><span class="line">  movw    %ax, %ds                <span class="comment"># -&gt; DS: Data Segment</span></span><br><span class="line">  movw    %ax, %es                <span class="comment"># -&gt; ES: Extra Segment</span></span><br><span class="line">  movw    %ax, %fs                <span class="comment"># -&gt; FS</span></span><br><span class="line">  movw    %ax, %gs                <span class="comment"># -&gt; GS</span></span><br><span class="line">  movw    %ax, %ss                <span class="comment"># -&gt; SS: Stack Segment</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment"># Set up the stack pointer and call into C.</span></span><br><span class="line">  movl    <span class="variable">$start</span>, %esp</span><br><span class="line">  call bootmain</span><br><span class="line"></span><br><span class="line">  <span class="comment"># If bootmain returns (it shouldn't), loop.</span></span><br></pre></td></tr></table></figure>
-
-<p>可以看到，boot.S最终调用了bootmain子程序，我们查看boot/main.c的源代码中的最后一条语句。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// call the entry point from the ELF header</span></span><br><span class="line">	<span class="comment">// note: does not return!</span></span><br><span class="line">	((<span class="keyword">void</span> (*)(<span class="keyword">void</span>)) (ELFHDR-&gt;e_entry))();</span><br></pre></td></tr></table></figure>
-
-<p>我们在obj/boot/boot.asm中找到这条语句的地址。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">((<span class="keyword">void</span> (*)(<span class="keyword">void</span>)) (ELFHDR-&gt;e_entry))();</span><br><span class="line">   <span class="number">7</span>d81:	ff <span class="number">15</span> <span class="number">18</span> <span class="number">00</span> <span class="number">01</span> <span class="number">00</span>    	call   *<span class="number">0x10018</span></span><br></pre></td></tr></table></figure>
-
-<p>在这里设置断点，这就是boot loader的最后一条执行的指令。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">(gdb) b *0x7d81</span><br><span class="line">Breakpoint 4 at 0x7d81</span><br><span class="line">(gdb) c</span><br><span class="line">Continuing</span><br><span class="line"></span><br><span class="line">=&gt; 0x7d81:      call   *0x10018</span><br><span class="line"></span><br><span class="line">Breakpoint 4, 0x00007d81 <span class="keyword">in</span> ?? ()</span><br><span class="line">(gdb) si</span><br><span class="line">=&gt; 0x10000c:    movw   <span class="variable">$0x1234</span>,0x472</span><br><span class="line">0x0010000c <span class="keyword">in</span> ?? ()</span><br></pre></td></tr></table></figure>
-
-<p>最后一条boot loader执行的指令就是</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">call   *0x10018</span><br></pre></td></tr></table></figure>
-
-<p>此时会从0x100018地址处取出跳转地址，跳转到该地址，也就是0x10000c，执行刚装载kernel第一条指令:</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">movw   <span class="variable">$0x1234</span>,0x472</span><br></pre></td></tr></table></figure>
-
-<h3 id="Problem3"><a href="#Problem3" class="headerlink" title="Problem3"></a>Problem3</h3><p><strong>Where* is the first instruction of the kernel?</strong></p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">=&gt; 0x10000c:    movw   <span class="variable">$0x1234</span>,0x472</span><br></pre></td></tr></table></figure>
-
-<p>这是装载kernel后的第一条指令，我们去obj/boot/kernel.asm查找这条指令</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//obj/boot/kernel.asm</span></span><br><span class="line"></span><br><span class="line">f010000c &lt;entry&gt;:</span><br><span class="line">f010000c:	<span class="number">66</span> c7 <span class="number">05</span> <span class="number">72</span> <span class="number">04</span> <span class="number">00</span> <span class="number">00</span> 	movw   $<span class="number">0x1234</span>,<span class="number">0x472</span></span><br><span class="line">f0100013:	<span class="number">34</span> <span class="number">12</span></span><br></pre></td></tr></table></figure>
-
-<p>所以第一条指令在kern/entry.S中。</p>
-<h3 id="problem4"><a href="#problem4" class="headerlink" title="problem4"></a>problem4</h3><p><strong>How does the boot loader decide how many sectors it must read in order to fetch the entire kernel from disk? Where does it find this information?</strong></p>
-<p>要想回答问题，我们首先得对链接器、加载器和ELF（Executable and Linkable Format：可执行可链接格式）文件有一些了解，笔者强烈推荐《深入理解计算机系统》第七章链接作为参考资料。  </p>
-<p>在类Unix系统下，假设我们有两个个C源文件，一个是main.c,另一个是sum.c，编译器把main.c翻译成一个<em>可重定位目标文件<em>main.o(事实上中间过程还有其他步骤)，sum.c也是如此，变成sum.o。最后，运行</em>链接器<em>，将main.o和sum.o以及一些必要的系统目标文件组合起来，形成了一个</em>可执行目标文件(executable object file)</em> prog。最后在linux shell上通过命令行输入它的名字运行程序。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./prog</span><br></pre></td></tr></table></figure>
-
-<p>shell会调用一个加载器的函数，它将可执行目标文件prog中的代码和数据复制到内存，将控制转移到这个程序的开头。  </p>
-<p>以上提到的可重定位目标文件和可执行目标文件都是一个ELF格式的文件。我们lab下obj/kern/kernel就是一个可执行目标文件，说明他是一个ELF格式的文件。接下来看一下ELF文件的具体格式。</p>
-<p>首先在最顶端的是一个ELF头（ELF Header）,接着是一个可变长度程序头（Program Header）列出了每个将要被加载到内存的程序节（我更喜欢叫程序段）。C语言在inc/elf.h头文件中定义了这些结构。而我们感兴趣的程序节主要是以下几种：  </p>
-<ul>
-<li>.text:程序的可执行指令，也就是已编译程序的机器代码。</li>
-<li>.rodata:只读数据，比如Ascii码表示的字符串字面量，printf语句中的格式串。</li>
-<li>.data:数据节保存的程序初始化诗句，帮你如已经初始化的全局和静态c变量，比如int x = 5。</li>
-<li>.bss:未初始化的全局和静态C变量，以及所有被初始化为0的全局或静态C变量。比如图 int x。值得注意的是，这个节只是个占位符，在目标文件中不占据实际空间。</li>
-</ul>
-<p>最后是一个节头部表，不同程序节的位置和大小是由节头部表描述的，也就是说我们只要知道ELF头的大小初始地址、每个程序节的地址以及大小和节头部表的偏移地址以及大小，那么我们就可以算出整个程序的大小了。kernel的大小也就可以通过这种方式计算出来，那么也就回答了问题4。  </p>
-<p>我们可以通过objdump -h 命令查看一个ELF文件的ELF格式。  </p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">$ objdump -h obj/kern/kernel </span><br><span class="line"></span><br><span class="line">kernel:     file format elf32-i386</span><br><span class="line"></span><br><span class="line">Sections:</span><br><span class="line">Idx Name          Size      VMA       LMA       File off  Algn</span><br><span class="line">  0 .text         00001acd  f0100000  00100000  00001000  2**4</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, CODE</span><br><span class="line">  1 .rodata       000006bc  f0101ae0  00101ae0  00002ae0  2**5</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, DATA</span><br><span class="line">  2 .stab         00004291  f010219c  0010219c  0000319c  2**2</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, DATA</span><br><span class="line">  3 .stabstr      0000197f  f010642d  0010642d  0000742d  2**0</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, DATA</span><br><span class="line">  4 .data         00009300  f0108000  00108000  00009000  2**12</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line">  5 .got          00000008  f0111300  00111300  00012300  2**2</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line">  6 .got.plt      0000000c  f0111308  00111308  00012308  2**2</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line">  7 .data.rel.local 00001000  f0112000  00112000  00013000  2**12</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line">  8 .data.rel.ro.local 00000044  f0113000  00113000  00014000  2**2</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line">  9 .bss          00000648  f0113060  00113060  00014060  2**5</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line"> 10 .comment      00000024  00000000  00000000  000146a8  2**0</span><br><span class="line">                  CONTENTS, READONLY</span><br></pre></td></tr></table></figure>
-
-<p>我们只关注以上提到的几个节，其他节主要是用来保存调试信息的，它们不会被加载器加载到内存中。  </p>
-<p>请特别注意.text节的 VMA(virtual memory address：虚拟内存地址)或者叫链接地址和 LMA(load memory address：加载内存地址)或者叫加载地址。节的加载地址是加载到内存中的内存地址。  </p>
-<p>比如：.text节中，LMA = 00100000,那我们就会把这个节装载到内存中的00100000物理地址中，大小是0x1acd，那么末尾地址就是 0x100000 + 0x1acd = 0x101acd。  </p>
-<p>而VMA = f01000000, 这就是反汇编文件kernel.asm中的第一行代码，为什么要有虚拟地址？这是为了进程的抽象：地址空间，让每个进程认为好像它认为拥有自己的私有物理内存的假象，其实操作系统（实际上是MMU：内存管理单元）完成了所有的工作，让不同的进程复用内存。  </p>
-<p>也就是说，这个虚拟地址VMA其实是程序自己看到的被装载进内存中的地址，而实际的物理地址LMA也就是加载地址是被MMU进行地址转换得到的。  </p>
-<p>我们再来查看一下boot.out的ELF格式：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">$ objdump -h obj/boot/boot.out         </span><br><span class="line"></span><br><span class="line">boot.out:     file format elf32-i386</span><br><span class="line"></span><br><span class="line">Sections:</span><br><span class="line">Idx Name          Size      VMA       LMA       File off  Algn</span><br><span class="line">  0 .text         0000019c  00007c00  00007c00  00000074  2**2</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, CODE</span><br><span class="line">  1 .eh_frame     0000009c  00007d9c  00007d9c  00000210  2**2</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, DATA</span><br><span class="line">  2 .stab         00000870  00000000  00000000  000002ac  2**2</span><br><span class="line">                  CONTENTS, READONLY, DEBUGGING</span><br><span class="line">  3 .stabstr      00000940  00000000  00000000  00000b1c  2**0</span><br><span class="line">                  CONTENTS, READONLY, DEBUGGING</span><br><span class="line">  4 .comment      0000002a  00000000  00000000  0000145c  2**0</span><br><span class="line">                  CONTENTS, READONLY</span><br></pre></td></tr></table></figure>
-
-<p>可以看到，.text节的VMA 和 LMA是相同的，这样硬件就不用进行额外的地址转换。  </p>
-<p>引导加载器使用ELF程序头决定了如何加载这些节到内存中。程序头指定了要加载到内存中的ELF对象的哪些部分，以及每个对象地址占用的目的地址，可以使用<em>objdump -x</em>指令查看程序头。  </p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">$ objdump -x obj/kern/kernel</span><br><span class="line"></span><br><span class="line">obj/kern/kernel:     file format elf32-i386</span><br><span class="line">obj/kern/kernel</span><br><span class="line">architecture: i386, flags 0x00000112:</span><br><span class="line">EXEC_P, HAS_SYMS, D_PAGED</span><br><span class="line">start address 0x0010000c</span><br><span class="line"></span><br><span class="line">Program Header:</span><br><span class="line">    LOAD off    0x00001000 vaddr 0xf0100000 paddr 0x00100000 align 2**12</span><br><span class="line">         filesz 0x00007dac memsz 0x00007dac flags r-x</span><br><span class="line">    LOAD off    0x00009000 vaddr 0xf0108000 paddr 0x00108000 align 2**12</span><br><span class="line">         filesz 0x0000b6a8 memsz 0x0000b6a8 flags rw-</span><br><span class="line">   STACK off    0x00000000 vaddr 0x00000000 paddr 0x00000000 align 2**4</span><br><span class="line">         filesz 0x00000000 memsz 0x00000000 flags rwx</span><br><span class="line"></span><br><span class="line">Sections:</span><br><span class="line">Idx Name          Size      VMA       LMA       File off  Algn</span><br><span class="line">  0 .text         00001acd  f0100000  00100000  00001000  2**4</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, CODE</span><br><span class="line">  1 .rodata       000006bc  f0101ae0  00101ae0  00002ae0  2**5</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, DATA</span><br><span class="line">  2 .stab         00004291  f010219c  0010219c  0000319c  2**2</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, DATA</span><br><span class="line">  3 .stabstr      0000197f  f010642d  0010642d  0000742d  2**0</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, DATA</span><br><span class="line">  4 .data         00009300  f0108000  00108000  00009000  2**12</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line">  5 .got          00000008  f0111300  00111300  00012300  2**2</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line">  6 .got.plt      0000000c  f0111308  00111308  00012308  2**2</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line">  7 .data.rel.local 00001000  f0112000  00112000  00013000  2**12</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line">  8 .data.rel.ro.local 00000044  f0113000  00113000  00014000  2**2</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line">  9 .bss          00000648  f0113060  00113060  00014060  2**5</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, DATA</span><br><span class="line"> 10 .comment      00000024  00000000  00000000  000146a8  2**0</span><br><span class="line">                  CONTENTS, READONLY</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
-
-<p>ELF对象需要加载到内存的区域是标记为LOAD的区域，程序头信息给出了虚拟地址信息，物理地址信息以及加载区域的大小（文件大小和内存大小）。  </p>
-<p>回到boot/main.c,  ph-p_pa 每个程序头的包含了该段的目标物理地址。   </p>
-<p>我来描述一下main.c的任务，读取ELF格式文件 obj/boot/kernel，把每个节和程序头的物理地址都加载到内存中。看下源代码：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ELFHDR		((struct Elf *) 0x10000) <span class="comment">// scratch space 暂存空间</span></span></span><br></pre></td></tr></table></figure>
-
-<p>这就是ELF头所在的地址，把他转化为一个指向ELF结构体的指针。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ph = (struct Proghdr *) ((<span class="keyword">uint8_t</span> *) ELFHDR + ELFHDR-&gt;e_phoff);</span><br></pre></td></tr></table></figure>
-
-<p>将ELF头地址加上程序头入口地址就能得到程序头地址，这里利用强制转换成了一个指向程序头结构体的指针。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">eph = ph + ELFHDR-&gt;e_phnum;</span><br></pre></td></tr></table></figure>
-
-<p>这里e_phnum就是程序头的数量，由于每一个程序头都记录了要装载到内存的程序的信息，比如程序所在的地址，要加载到内存的物理地址等等，eph就是最后一个的程序头的地址，这样我们就可以遍历每个程序头，将它们的代码读取到内存的指定位置中。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (; ph &lt; eph; ph++)</span><br><span class="line">	<span class="comment">// p_pa is the load address of this segment (as well</span></span><br><span class="line">	<span class="comment">// as the physical address)</span></span><br><span class="line">	readseg(ph-&gt;p_pa, ph-&gt;p_memsz, ph-&gt;p_offset);</span><br></pre></td></tr></table></figure>
-
-<p>其实就是从kernel中的每个程序头的offset起始地址(ph_offset)开始读取程序段到程序头要加载到内存中的物理地址(ph-&gt;p_pa),大小是ph-&gt;p_memsz个字节，而每次读取程序段过程中又会去读扇区。所以problem4的问题就可以回答了，程序头有多少个条目，就会读取多少次程序段，读程序段的次数乘以每次读扇区的数目也就是读内核所需要的扇区数目。</p>
-<p>内核到此加载完毕。</p>
-
+        
+          <p class="article-more-link">
+            <a href="/2020/12/10/xv6-6-828-lab1-part2-The-Boot-Loader/#more">继续阅读全文 »</a>
+          </p>
+        
       
     </div>
     <footer class="article-footer">
@@ -227,38 +188,12 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <!-- Table of Contents -->
-        
         <h2 id="Part1：引导PC"><a href="#Part1：引导PC" class="headerlink" title="Part1：引导PC"></a>Part1：引导PC</h2><p>这个部分的主要任务就是使用qemu模拟器引导JOS，也就是将操作系统内核加载到内存中，启动它。</p>
-<h3 id="启程：x86汇编"><a href="#启程：x86汇编" class="headerlink" title="启程：x86汇编"></a>启程：x86汇编</h3><p>熟悉x86汇编的话完全可以略过这一部分。如果想学习基本的x86汇编，讲义也给出了一个比较不错的入门文章：<a href="http://www.delorie.com/djgpp/doc/brennan/brennan_att_inline_djgpp.html" target="_blank" rel="noopener">Brennan’s Guide to inline Assembly</a>.</p>
-<h3 id="模拟x86"><a href="#模拟x86" class="headerlink" title="模拟x86"></a>模拟x86</h3><p> 进入到lab文件夹，进行编译<em>make</em>.  </p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">linux% <span class="built_in">cd</span> lab</span><br><span class="line">linux% make</span><br><span class="line">+ as kern/entry.S</span><br><span class="line">+ cc kern/entrypgdir.c</span><br><span class="line">+ cc kern/init.c</span><br><span class="line">+ cc kern/console.c</span><br><span class="line">+ cc kern/monitor.c</span><br><span class="line">+ cc kern/printf.c</span><br><span class="line">+ cc kern/kdebug.c</span><br><span class="line">+ cc lib/printfmt.c</span><br><span class="line">+ cc lib/readline.c</span><br><span class="line">+ cc lib/string.c</span><br><span class="line">+ ld obj/kern/kernel</span><br><span class="line">+ as boot/boot.S</span><br><span class="line">+ cc -Os boot/main.c</span><br><span class="line">+ ld boot/boot</span><br><span class="line">boot block is 380 bytes (max 510)</span><br><span class="line">+ mk obj/kern/kernel.img</span><br></pre></td></tr></table></figure>
-
-<p>编译期间可能会出现一系列的错误。关于这些错误的解决方案可以参考这个大佬的环境搭建教程：<a href="https://www.cnblogs.com/gatsby123/p/9746193.html" target="_blank" rel="noopener">6.828-JOS-环境搭建</a></p>
-<p>tips:这个编译需要提前安装好qemu模拟器，关于qemu模拟器的安装可以参考上面的大佬的环境搭建。  </p>
-<p>如果你编译过程中出现了”undefined reference to `__udivdi3’”错误，是因为你的linux系统是64位的，那么可能需要32位库才能编译成功。  </p>
-<p>终端运行如下命令：  </p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install gcc-multilib</span><br></pre></td></tr></table></figure>
-
-<p>编译成功之后运行如下命令：<em>make qemu</em>如果成功将会看到如下提示。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">$ sudo make qemu</span><br><span class="line">qemu-system-i386 -drive file=obj/kern/kernel.img,index=0,media=disk,format=raw -serial mon:stdio -gdb tcp::25000 -D qemu.log </span><br><span class="line">VNC server running on `127.0.0.1:5900<span class="string">'</span></span><br><span class="line"><span class="string">6828 decimal is XXX octal!</span></span><br><span class="line"><span class="string">entering test_backtrace 5</span></span><br><span class="line"><span class="string">entering test_backtrace 4</span></span><br><span class="line"><span class="string">entering test_backtrace 3</span></span><br><span class="line"><span class="string">entering test_backtrace 2</span></span><br><span class="line"><span class="string">entering test_backtrace 1</span></span><br><span class="line"><span class="string">entering test_backtrace 0</span></span><br><span class="line"><span class="string">leaving test_backtrace 0</span></span><br><span class="line"><span class="string">leaving test_backtrace 1</span></span><br><span class="line"><span class="string">leaving test_backtrace 2</span></span><br><span class="line"><span class="string">leaving test_backtrace 3</span></span><br><span class="line"><span class="string">leaving test_backtrace 4</span></span><br><span class="line"><span class="string">leaving test_backtrace 5</span></span><br><span class="line"><span class="string">Welcome to the JOS kernel monitor!</span></span><br><span class="line"><span class="string">Type '</span><span class="built_in">help</span><span class="string">' for a list of commands.</span></span><br><span class="line"><span class="string">K&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>这样我们就成功的将内核从硬盘引导起来了。</p>
-<h3 id="The-ROM-BIOS"><a href="#The-ROM-BIOS" class="headerlink" title="The ROM BIOS"></a>The ROM BIOS</h3><p>我们在linux打开两个终端，进入lab文件夹。第一个运行<em>make qemu-gdb</em>命令，显示如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ sudo make qemu-gdb</span><br><span class="line">***</span><br><span class="line">*** Now run <span class="string">'make gdb'</span>.</span><br><span class="line">***</span><br><span class="line">qemu-system-i386 -drive file=obj/kern/kernel.img,index=0,media=disk,format=raw -serial mon:stdio -gdb tcp::25000 -D qemu.log  -S</span><br><span class="line">VNC server running on `127.0.0.1:5900<span class="string">'</span></span><br></pre></td></tr></table></figure>
-
-<p>第二个运行 <em>make gdb</em>命令，显示如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">$ sudo make gdb</span><br><span class="line">gdb -n -x .gdbinit</span><br><span class="line">GNU gdb (Ubuntu 9.1-0ubuntu1) 9.1</span><br><span class="line">Copyright (C) 2020 Free Software Foundation, Inc.</span><br><span class="line">License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl.html&gt;</span><br><span class="line">This is free software: you are free to change and redistribute it.</span><br><span class="line">There is NO WARRANTY, to the extent permitted by law.</span><br><span class="line">Type <span class="string">"show copying"</span> and <span class="string">"show warranty"</span> <span class="keyword">for</span> details.</span><br><span class="line">This GDB was configured as <span class="string">"x86_64-linux-gnu"</span>.</span><br><span class="line">Type <span class="string">"show configuration"</span> <span class="keyword">for</span> configuration details.</span><br><span class="line">For bug reporting instructions, please see:</span><br><span class="line">&lt;http://www.gnu.org/software/gdb/bugs/&gt;.</span><br><span class="line">Find the GDB manual and other documentation resources online at:</span><br><span class="line">    &lt;http://www.gnu.org/software/gdb/documentation/&gt;.</span><br><span class="line"></span><br><span class="line">For <span class="built_in">help</span>, <span class="built_in">type</span> <span class="string">"help"</span>.</span><br><span class="line">Type <span class="string">"apropos word"</span> to search <span class="keyword">for</span> commands related to <span class="string">"word"</span>.</span><br><span class="line">+ target remote localhost:25000</span><br><span class="line">warning: No executable has been specified and target does not support</span><br><span class="line">determining executable automatically.  Try using the <span class="string">"file"</span> <span class="built_in">command</span>.</span><br><span class="line">warning: A handler <span class="keyword">for</span> the OS ABI <span class="string">"GNU/Linux"</span> is not built into this configuration</span><br><span class="line">of GDB.  Attempting to <span class="built_in">continue</span> with the default i8086 settings.</span><br><span class="line"></span><br><span class="line">The target architecture is assumed to be i8086</span><br><span class="line">[f000:fff0]    0xffff0: ljmp   <span class="variable">$0xf000</span>,<span class="variable">$0xe05b</span></span><br><span class="line">0x0000fff0 <span class="keyword">in</span> ?? ()</span><br></pre></td></tr></table></figure>
-
-<p>我们重点关注这一行:</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[f000:fff0]    0xffff0: ljmp   <span class="variable">$0xf000</span>,<span class="variable">$0xe05b</span></span><br></pre></td></tr></table></figure>
-
-<p>[f000:fff0]就是(cs:ip)的值称为逻辑地址，它是由段地址：偏移地址表示的，而0xffff0也就是在内存中实际的物理地址，它的值是由段地址 * 16 + 偏移地址得来的，也就是 f000 * 16 + fff0 = f0000 + fff0 = ffff0.  </p>
-<p>为什么是*16呢？这是因为8086、8088CPU的寄存器是16位的，而地址线有20线，16位线的地址如何拼接成20位地址呢？结论就是将段寄存器中的值左移4位，形成20位段基地址，然后和16位偏移地址相加，就得到了物理地址。  </p>
-<p>回到实际的物理地址：0xffff0,这是BIOS（0x100000）结束前的16个字节。也就是说，我们现在在运行BIOS，因为当前指令的地址存放的是BIOS的代码和数据，当BIOS运行时，它会创建一个中断描述符表以及初始化不同的设备比如VGA显示，这也是我们能在QEMU窗口看到“Starting SeaBIOS”的这条消息的原因。  </p>
-<p>BIOS会初始化PCI总线和所知的所有重要设备后，它将搜索可引导的设备比如软盘、硬盘驱动器，CD-ROM。最终，当他找到一个可引导磁盘时，会从磁盘读取引导加载程序并将控制权转移给该引导加载程序。  </p>
-<p>到此我们这一部分告一段落，下一部分就是关于引导加载程序如何引导内核。</p>
-
+        
+          <p class="article-more-link">
+            <a href="/2020/12/10/xv6-6-828-lab1-part1-PC-Bootstrap/#more">继续阅读全文 »</a>
+          </p>
+        
       
     </div>
     <footer class="article-footer">
@@ -627,7 +562,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title tagcloud">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Java/" style="font-size: 14px;">Java</a> <a href="/tags/Javaweb-Servlet/" style="font-size: 14px;">Javaweb Servlet</a> <a href="/tags/javaweb/" style="font-size: 25px;">javaweb</a> <a href="/tags/sql/" style="font-size: 25px;">sql</a> <a href="/tags/xv6/" style="font-size: 25px;">xv6</a> <a href="/tags/%E6%8F%90%E5%8D%87/" style="font-size: 14px;">提升</a>
+      <a href="/tags/Java/" style="font-size: 14px;">Java</a> <a href="/tags/Javaweb-Servlet/" style="font-size: 14px;">Javaweb Servlet</a> <a href="/tags/javaweb/" style="font-size: 19.5px;">javaweb</a> <a href="/tags/sql/" style="font-size: 19.5px;">sql</a> <a href="/tags/xv6/" style="font-size: 25px;">xv6</a> <a href="/tags/%E6%8F%90%E5%8D%87/" style="font-size: 14px;">提升</a>
     </div>
   </div>
 
@@ -637,6 +572,10 @@
     <h3 class="widget-title recent-posts">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2020/12/12/xv6-6-828-lab1-part3-The-Kernel/">xv6-6.828-lab1-part3:The Kernel</a>
+          </li>
         
           <li>
             <a href="/2020/12/10/xv6-6-828-lab1-part2-The-Boot-Loader/">xv6-6.828-lab1-part2:The Boot Loader</a>
@@ -654,10 +593,6 @@
             <a href="/2020/10/30/%E4%BB%8E0%E5%BC%80%E5%A7%8B%E5%86%99DBMS/">从零开始写DBMS:绪论</a>
           </li>
         
-          <li>
-            <a href="/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/">聊聊Servlet(三)：HttpServletRequest</a>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -667,7 +602,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title archive">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/12/">December 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/11/">November 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/10/">October 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/08/">August 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/12/">December 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/11/">November 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/10/">October 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/08/">August 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li></ul>
     </div>
   </div>
 

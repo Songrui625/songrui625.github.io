@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>xv6-6.828-lab1-part3:The Kernel | 越今朝的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Part3 The Kernel在这个部分，我们更详细的研究JOS内核（最后还会写一些代码）。与引导加载器一样，内核从一些汇编语言代码开始，这些代码会进行设置，以便C语言代码可以正确执行。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xv6-6.828-lab1-part3:The Kernel">
+<meta property="og:url" content="http://songrui625.github.io/2020/12/12/xv6-6-828-lab1-part3-The-Kernel/index.html">
+<meta property="og:site_name" content="越今朝的博客">
+<meta property="og:description" content="Part3 The Kernel在这个部分，我们更详细的研究JOS内核（最后还会写一些代码）。与引导加载器一样，内核从一些汇编语言代码开始，这些代码会进行设置，以便C语言代码可以正确执行。">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-12-12T04:20:08.000Z">
+<meta property="article:modified_time" content="2020-12-12T08:14:28.921Z">
+<meta property="article:author" content="越今朝">
+<meta property="article:tag" content="xv6">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="越今朝的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    
+    <div id="header-inner" class="inner">
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://songrui625.github.io"></form>
+      </div>
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">首页</a>
+        
+          <a class="main-nav-link" href="/archives">归档</a>
+        
+          <a class="main-nav-link" href="/about">关于</a>
+        
+      </nav>
+      
+    </div>
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">越今朝的博客</a>
+      </h1>
+      
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-xv6-6-828-lab1-part3-The-Kernel" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/12/12/xv6-6-828-lab1-part3-The-Kernel/" class="article-date">
+  <time datetime="2020-12-12T04:20:08.000Z" itemprop="datePublished">2020-12-12</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      xv6-6.828-lab1-part3:The Kernel
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- Table of Contents -->
+        
+        <h2 id="Part3-The-Kernel"><a href="#Part3-The-Kernel" class="headerlink" title="Part3 The Kernel"></a>Part3 The Kernel</h2><p>在这个部分，我们更详细的研究JOS内核（最后还会写一些代码）。与引导加载器一样，内核从一些汇编语言代码开始，这些代码会进行设置，以便C语言代码可以正确执行。</p>
+<a id="more"></a>
+
+<h3 id="使用虚拟内存来解决位置依赖问题"><a href="#使用虚拟内存来解决位置依赖问题" class="headerlink" title="使用虚拟内存来解决位置依赖问题"></a>使用虚拟内存来解决位置依赖问题</h3><p>如上一章看到的，引导加载器的链接地址和加载地址完全匹配，但是内核的链接地址和加载地址之间存在相当大的差异。我在这里贴一下上一章的代码。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">$ objdump -h obj/boot/boot.out</span><br><span class="line"></span><br><span class="line">obj/boot/boot.out:     file format elf32-i386</span><br><span class="line"></span><br><span class="line">Sections:</span><br><span class="line">Idx Name          Size      VMA       LMA       File off  Algn</span><br><span class="line">  0 .text         0000019c  00007c00  00007c00  00000074  2**2</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, CODE</span><br><span class="line">  1 .eh_frame     0000009c  00007d9c  00007d9c  00000210  2**2</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, DATA</span><br><span class="line">  2 .stab         00000870  00000000  00000000  000002ac  2**2</span><br><span class="line">                  CONTENTS, READONLY, DEBUGGING</span><br><span class="line">  3 .stabstr      00000940  00000000  00000000  00000b1c  2**0</span><br><span class="line">                  CONTENTS, READONLY, DEBUGGING</span><br><span class="line">  4 .comment      0000002a  00000000  00000000  0000145c  2**0</span><br><span class="line">                  CONTENTS, READONLY</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ objdump -h obj/kern/kernel</span><br><span class="line"></span><br><span class="line">obj/kern/kernel:     file format elf32-i386</span><br><span class="line"></span><br><span class="line">Sections:</span><br><span class="line">Idx Name          Size      VMA       LMA       File off  Algn</span><br><span class="line">  0 .text         00001acd  f0100000  00100000  00001000  2**4</span><br><span class="line">                  CONTENTS, ALLOC, LOAD, READONLY, CODE</span><br></pre></td></tr></table></figure>
+
+<p>VMA和LMA差了f0000000。  </p>
+<p>操作系统内核通常会被链接到很高的虚拟地址运行，比如0xf0100000,这是为了将处理器虚拟地址空间的低部分留给用户程序使用。  </p>
+<p>很多机器物理地址范围都无法达到0xf0100000,所以我们不能指望把内核存储在那里。相反，我们可以使用处理器的内存管理硬件将虚拟地址0xf0100000(内核代码期望的运行地址)映射到物理地址0x0100000(引导加载器将内核加载到物理内存中的地址)。通过这种方法，尽管内核的虚拟地址很高但是留下了足够多的地址空间以供用户进程使用，它会被加载到PC RAM中物理内存中1MB的位置，就在BIOS ROM的上方。这种方法要求PC具有几M字节的物理内存，这样才能使物理地址0x00100000起作用。  </p>
+<p>现在，我们只需要映射物理内存的前4MB字节，就足够让内核启动并运行。我们使用kern/entrypgdir.c中的手写的，静态初始化的页目录和页表来完成这个工作。现在没有必要了解具体细节，知道实现方式就可以了。  </p>
+<p>在kern/entry.S代码中设置CR0_PG标志之前，内存引用被看作是物理地址（严格地说，它们是线性地址，但是boot/boot.S设置了一个标识符来从线性地址映射到物理地址，然后永远不会改变标识符）。一旦CR0_PG标志被设置，内存引用会被当作是虚拟地址，虚拟内存硬件会将这些引用转换为物理地址。  </p>
+<p><strong>Exercise7</strong></p>
+<blockquote>
+<p>Use QEMU and GDB to trace into the JOS kernel and stop at the <code>movl %eax, %cr0</code>. Examine memory at 0x00100000 and at 0xf0100000. Now, single step over that instruction using the stepi GDB command. Again, examine memory at 0x00100000 and at 0xf0100000. Make sure you understand what just happened.</p>
+<p>What is the first instruction <em>after</em> the new mapping is established that would fail to work properly if the mapping weren’t in place? Comment out the <code>movl %eax, %cr0</code> in <code>kern/entry.S</code>, trace into it, and see if you were right.</p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">=&gt; 0x100025:    mov    %eax,%cr0</span><br><span class="line">0x00100025 <span class="keyword">in</span> ?? ()</span><br><span class="line"></span><br><span class="line">//执行前</span><br><span class="line">(gdb) x/8x 0x100000</span><br><span class="line">0x100000:       0x1badb002      0x00000000      0xe4524ffe      0x7205c766</span><br><span class="line">0x100010:       0x34000004      0x2000b812      0x220f0011      0xc0200fd8</span><br><span class="line">(gdb) x/8x 0xf0100000</span><br><span class="line">0xf0100000 &lt;_start-268435468&gt;:  0x00000000      0x00000000      0x00000000      0x00000000</span><br><span class="line">0xf0100010 &lt;entry+4&gt;:   0x00000000      0x00000000      0x00000000      0x0000000</span><br><span class="line"></span><br><span class="line">(gdb) si</span><br><span class="line">=&gt; 0x100028:    mov    <span class="variable">$0xf010002f</span>,%eax</span><br><span class="line">0x00100028 <span class="keyword">in</span> ?? ()</span><br><span class="line">//执行后</span><br><span class="line">(gdb) x/8x 0x100000</span><br><span class="line">0x100000:       0x1badb002      0x00000000      0xe4524ffe      0x7205c766</span><br><span class="line">0x100010:       0x34000004      0x2000b812      0x220f0011      0xc0200fd8</span><br><span class="line"></span><br><span class="line">(gdb) x/8x 0xf0100000</span><br><span class="line">0xf0100000 &lt;_start-268435468&gt;:  0x1badb002      0x00000000      0xe4524ffe      0x7205c766</span><br><span class="line">0xf0100010 &lt;entry+4&gt;:   0x34000004      0x2000b812      0x220f0011      0xc0200fd8</span><br></pre></td></tr></table></figure>
+
+<p>两者唯一的区别就是执行了movl %eax, %cr0指令后，虚拟地址0xf0100000被映射到了实际物理地址0x00100000处。</p>
+<p>现在我们把movl %eax, %cr0注释掉，重新跟踪。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">=&gt; 0x10001d:    mov    %cr0,%eax</span><br><span class="line">0x0010001d <span class="keyword">in</span> ?? ()</span><br><span class="line">(gdb) si</span><br><span class="line">=&gt; 0x100020:    or     <span class="variable">$0x80010001</span>,%eax</span><br><span class="line">0x00100020 <span class="keyword">in</span> ?? ()</span><br><span class="line">(gdb) si</span><br><span class="line">=&gt; 0x100025:    mov    <span class="variable">$0xf010002c</span>,%eax</span><br><span class="line">0x00100025 <span class="keyword">in</span> ?? ()</span><br><span class="line">(gdb) x/8x 0x100000</span><br><span class="line">0x100000:       0x1badb002      0x00000000      0xe4524ffe      0x7205c766</span><br><span class="line">0x100010:       0x34000004      0x2000b812      0x220f0011      0xc0200fd8</span><br><span class="line">(gdb) x/8x 0xf0100000</span><br><span class="line">0xf0100000 &lt;_start-268435468&gt;:  0x00000000      0x00000000      0x00000000      0x00000000</span><br><span class="line">0xf0100010 &lt;entry+4&gt;:   0x00000000      0x00000000      0x00000000      0x00000000</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，注释掉<em>movl %eax, %cr0</em>后，虚拟地址0xf0100000就无法映射到内存地址0x100000了。这也印证了我们上面的描述，一旦设置了CR0_PG标志后，内存引用会被当作是虚拟地址。</p>
+<h3 id="格式化打印到控制台"><a href="#格式化打印到控制台" class="headerlink" title="格式化打印到控制台"></a>格式化打印到控制台</h3><p>很多人把printf()函数认为是理所当然的，有时甚至认为它是C语言的“原语”。但是，在一个操作系统内核中，我们必须亲自实现所有I/O操作。  </p>
+<p>阅读kern/printf.c, lib/printfmt.c和kern/console.c.确保理解它们之间的关系。在后面的lab将会理解为什么printfmt.c是位于独立的lib目录中。  </p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//kern/printf.c</span></span><br><span class="line"><span class="comment">// Simple implementation of cprintf console output for the kernel,</span></span><br><span class="line"><span class="comment">// based on printfmt() and the kernel console's cputchar().</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;inc/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;inc/stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;inc/stdarg.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">putch(<span class="keyword">int</span> ch, <span class="keyword">int</span> *cnt)</span><br><span class="line">&#123;</span><br><span class="line">	cputchar(ch);</span><br><span class="line">	*cnt++;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span></span><br><span class="line">vcprintf(<span class="keyword">const</span> <span class="keyword">char</span> *fmt, va_list ap)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">int</span> cnt = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	vprintfmt((<span class="keyword">void</span>*)putch, &amp;cnt, fmt, ap);</span><br><span class="line">	<span class="keyword">return</span> cnt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们通过函数调用关系可以知道，console.c中的cputchar()被封装成了putch（），向控制台输出一个字符,而printfmt.c中的vprintfmt（）被封装成了vcprintf()，作用是打印一个字符串，vcprintf()又被封装成cprinf()供用户使用。  </p>
+<p><strong>Excersize8</strong></p>
+<blockquote>
+<p>We have omitted a small fragment of code - the code necessary to print octal numbers using patterns of the form “%o”. Find and fill in this code fragment.</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> <span class="string">'o'</span>:</span><br><span class="line"><span class="comment">// Replace this with your code.</span></span><br><span class="line"></span><br><span class="line">putch(<span class="string">'0'</span>, putdat);</span><br><span class="line">num = getuint(&amp;ap, lflag);</span><br><span class="line">base = <span class="number">8</span>;</span><br><span class="line"><span class="keyword">goto</span> number;</span><br></pre></td></tr></table></figure>
+
+<p>回答以下问题：</p>
+<p><strong>1.Explain the interface between <code>printf.c</code> and <code>console.c</code>. Specifically, what function does <code>console.c</code> export? How is this function used by <code>printf.c</code>?</strong>  </p>
+<p>具体答案就在上面。</p>
+<p><strong>2.Explain the following from <code>console.c</code>:</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">   <span class="comment">//crt:阴极射线显像管，后文统称显示屏</span></span><br><span class="line"><span class="keyword">if</span> (crt_pos &gt;= CRT_SIZE) &#123;</span><br><span class="line">   	<span class="comment">//如果显示屏显示字符的位置超过了显示屏最大显示字符字数</span></span><br><span class="line">             <span class="keyword">int</span> i;</span><br><span class="line">             memmove(crt_buf, crt_buf + CRT_COLS, (CRT_SIZE - CRT_COLS) * <span class="keyword">sizeof</span>(<span class="keyword">uint16_t</span>));</span><br><span class="line">       	  <span class="comment">//将控制台已经存在的字符移到上一行。</span></span><br><span class="line">             <span class="keyword">for</span> (i = CRT_SIZE - CRT_COLS; i &lt; CRT_SIZE; i++)</span><br><span class="line">                     crt_buf[i] = <span class="number">0x0700</span> | <span class="string">' '</span>;</span><br><span class="line">       	  <span class="comment">//然后擦除当前行的所有字符，也就是每个字符用空字符‘ ’代替</span></span><br><span class="line">             crt_pos -= CRT_COLS;</span><br><span class="line">             <span class="comment">//更新当前字符位置</span></span><br><span class="line">     &#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>3.Trace the execution of the following code step-by-step:</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> x = <span class="number">1</span>, y = <span class="number">3</span>, z = <span class="number">4</span>;</span><br><span class="line">cprintf(<span class="string">"x %d, y %x, z %d\n"</span>, x, y, z);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>In the call to <code>cprintf()</code>, to what does <code>fmt</code> point? To what does <code>ap</code> point?</li>
+</ul>
+<p>在kern/init.c中的i386_init()中添加以上代码。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span></span><br><span class="line">i386_init(<span class="keyword">void</span>)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">extern</span> <span class="keyword">char</span> edata[], <span class="built_in">end</span>[];</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Before doing anything else, complete the ELF loading process.</span></span><br><span class="line">	<span class="comment">// Clear the uninitialized global data (BSS) section of our program.</span></span><br><span class="line">	<span class="comment">// This ensures that all static/global variables start out zero.</span></span><br><span class="line">	<span class="built_in">memset</span>(edata, <span class="number">0</span>, <span class="built_in">end</span> - edata);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Initialize the console.</span></span><br><span class="line">	<span class="comment">// Can't call cprintf until after we do this!</span></span><br><span class="line">	cons_init();</span><br><span class="line"></span><br><span class="line">	cprintf(<span class="string">"6828 decimal is %o octal!\n"</span>, <span class="number">6828</span>);</span><br><span class="line">	</span><br><span class="line">+	<span class="keyword">int</span> x = <span class="number">1</span>, y = <span class="number">3</span>, z = <span class="number">4</span>;</span><br><span class="line">+Lab1_exercise8_3:</span><br><span class="line">+	cprintf(<span class="string">"x %d, y %x, z %d\n"</span>, x, y, z);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Test the stack backtrace function (lab 1 only)</span></span><br><span class="line">	test_backtrace(<span class="number">5</span>);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Drop into the kernel monitor.</span></span><br><span class="line">	<span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">		monitor(<span class="literal">NULL</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后运行，make qemu，在反汇编代码kern/kernel.asm中找到标号：Lab——exercise8_3。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">	<span class="keyword">int</span> x = <span class="number">1</span>, y = <span class="number">3</span>, z = <span class="number">4</span>;</span><br><span class="line">Lab1_exercise8_3:</span><br><span class="line">	cprintf(<span class="string">"x %d, y %x, z %d\n"</span>, x, y, z);</span><br><span class="line">f01000f0:	<span class="number">6</span>a <span class="number">04</span>                	push   $<span class="number">0x4</span></span><br><span class="line">f01000f2:	<span class="number">6</span>a <span class="number">03</span>                	push   $<span class="number">0x3</span></span><br><span class="line">f01000f4:	<span class="number">6</span>a <span class="number">01</span>                	push   $<span class="number">0x1</span></span><br><span class="line">f01000f6:	<span class="number">8</span>d <span class="number">83</span> <span class="number">6</span>a <span class="number">08</span> ff ff    	lea    <span class="number">-0xf796</span>(%ebx),%eax</span><br><span class="line">f01000fc:	<span class="number">50</span>                   	push   %eax</span><br><span class="line">f01000fd:	e8 <span class="number">9b</span> <span class="number">09</span> <span class="number">00</span> <span class="number">00</span>       	call   f0100a9d &lt;cprintf&gt;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到参数是从右到左压入栈顶的，打上断点，进行debug，单步调试。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">=&gt; 0xf0100a9d &lt;cprintf&gt;:        endbr32 </span><br><span class="line">cprintf (fmt=0xf0101b72 <span class="string">"x %d, y %x, z %d\n"</span>) at kern/printf.c:27</span><br><span class="line">27      &#123;</span><br><span class="line">(gdb) x/s 0xf0101b72</span><br><span class="line">0xf0101b72:     <span class="string">"x %d, y %x, z %d\n"</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到fmt指针指向的是cprintf()中的格式化字符串。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">vcprintf (fmt=0xf0101b72 <span class="string">"x %d, y %x, z %d\n"</span>, ap=0xf010ffd4 <span class="string">"\001"</span>) at kern/printf.c:18</span><br><span class="line">18      &#123;</span><br><span class="line">(gdb) x/s 0xf010ffd4</span><br><span class="line">0xf010ffd4:     <span class="string">"\001"</span></span><br></pre></td></tr></table></figure>
+
+<p>而ap指针指向的是第一个参数的地址，也就是栈顶的位置（前面说了参数是从右到左压入栈顶，那栈顶应该是1）。</p>
+<ul>
+<li>List (in order of execution) each call to <code>cons_putc</code>, <code>va_arg</code>, and <code>vcprintf</code>. For <code>cons_putc</code>, list its argument as well. For <code>va_arg</code>, list what <code>ap</code> points to before and after the call. For <code>vcprintf</code> list the values of its two arguments.</li>
+</ul>
+<p>知道了fmt指针和ap指针的作用，我们就可以很轻松的回答这个问题。  </p>
+<p><strong>4.Run the following code.</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">unsigned</span> <span class="keyword">int</span> i = <span class="number">0x00646c72</span>;</span><br><span class="line">cprintf(<span class="string">"H%x Wo%s"</span>, <span class="number">57616</span>, &amp;i);</span><br></pre></td></tr></table></figure>
+
+<p>打印出来的字符是He110 World, 57616的十六进制是e110, 而 0x72, 0x6c, 0x64, 0x00对应的ascii字符是‘r’、‘l’、‘d’，而因为机器是一个小端机，所以在内存中的布局是由低到高是0x72, 0x6c, 0x64, 0x00，当作字符串就是”rld\0”，我在末尾加了换行符，所以显示的是：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">6828 decimal is 015254 octal!</span><br><span class="line">x 1, y 3, z 4</span><br><span class="line">He110 World</span><br><span class="line">entering test_backtrace 5</span><br></pre></td></tr></table></figure>
+
+<p><strong>5.In the following code, what is going to be printed after <code>&#39;y=&#39;</code>? (note: the answer is not a specific value.) Why does this happen?</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cprintf(<span class="string">"x=%d y=%d"</span>, <span class="number">3</span>);</span><br></pre></td></tr></table></figure>
+
+<p>看一下打印结果。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">x 3, y -267321364</span><br></pre></td></tr></table></figure>
+
+<p>为什么会这样子呢？我们知道参数是从右向左压入栈的，所以栈顶是第一个参数的地址，我们可以单步调试查看%esp寄存器查看栈顶内容。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">=&gt; 0xf010012d &lt;i386_init+131&gt;:  call   0xf0100acf &lt;cprintf&gt;</span><br><span class="line">0xf010012d <span class="keyword">in</span> i386_init () at kern/init.c:45</span><br><span class="line">45              cprintf(<span class="string">"x %d, y %d\n"</span>, 3);</span><br><span class="line">(gdb) x /16xw <span class="variable">$esp</span></span><br><span class="line">0xf010ffd0:     0xf0101bae      0x00000003      0xf010ffec      0x00000000</span><br><span class="line">0xf010ffe0:     0x00000000      0x00000000      0x00000000      0x00646c72</span><br><span class="line">0xf010fff0:     0x00000000      0x00010094      0x00000000      0xf010003e</span><br><span class="line">0xf0110000 &lt;entry_pgtable&gt;:     0x00000003      0x00001003      0x00002003      0x00003003</span><br></pre></td></tr></table></figure>
+
+<p>内存0x0000003的后一个内存地址的内容是0xf010ffec，说明就是y打印的值，转换成十进制就是-267321364，查看结果验证。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">He110 World</span><br><span class="line">x 3, y -267321364</span><br><span class="line">entering test_backtrace 5</span><br></pre></td></tr></table></figure>
+
+<p><strong>6.Let’s say that GCC changed its calling convention so that it pushed arguments on the stack in declaration order, so that the last argument is pushed last. How would you have to change <code>cprintf</code> or its interface so that it would still be possible to pass it a variable number of arguments?</strong></p>
+<p>所以说C语言支持可变参数的原因正是因为参数压栈是按照从右到左的顺序。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://songrui625.github.io/2020/12/12/xv6-6-828-lab1-part3-The-Kernel/" data-id="ckilfbbj600009cu9exi9dmi5" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/xv6/" rel="tag">xv6</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+ 
+<script src="/jquery/jquery.min.js"></script>
+
+  <div id="random_posts">
+    <h2>Recommended Posts</h2>
+    <div class="random_posts_ul">
+      <script>
+          var random_count =4
+          var site = {BASE_URI:'/'};
+          function load_random_posts(obj) {
+              var arr=site.posts;
+              if (!obj) return;
+              // var count = $(obj).attr('data-count') || 6;
+              for (var i, tmp, n = arr.length; n; i = Math.floor(Math.random() * n), tmp = arr[--n], arr[n] = arr[i], arr[i] = tmp);
+              arr = arr.slice(0, random_count);
+              var html = '<ul>';
+            
+              for(var j=0;j<arr.length;j++){
+                var item=arr[j];
+                html += '<li><strong>' + 
+                item.date + ':&nbsp;&nbsp;<a href="' + (site.BASE_URI+item.uri) + '">' + 
+                (item.title || item.uri) + '</a></strong>';
+                if(item.excerpt){
+                  html +='<div class="post-excerpt">'+item.excerpt+'</div>';
+                }
+                html +='</li>';
+                
+              }
+              $(obj).html(html + '</ul>');
+          }
+          $('.random_posts_ul').each(function () {
+              var c = this;
+              if (!site.posts || !site.posts.length){
+                  $.getJSON(site.BASE_URI + 'js/posts.js',function(json){site.posts = json;load_random_posts(c)});
+              } 
+               else{
+                load_random_posts(c);
+              }
+          });
+      </script>
+    </div>
+  </div>
+
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2020/12/10/xv6-6-828-lab1-part2-The-Boot-Loader/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">xv6-6.828-lab1-part2:The Boot Loader</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+ 
+     
+  <div class="comments" id="comments">
+    
+     
+       
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+       
+      
+      
+  </div>
+ 
+  
+
+</section>
+           
+    <aside id="sidebar">
+  
+    
+
+  
+    
+    <div class="widget-wrap">
+    
+      <div class="widget" id="toc-widget-fixed">
+      
+        <strong class="toc-title">Content</strong>
+        <div class="toc-widget-list">
+              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Part3-The-Kernel"><span class="toc-number">1.</span> <span class="toc-text">Part3 The Kernel</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#使用虚拟内存来解决位置依赖问题"><span class="toc-number">1.1.</span> <span class="toc-text">使用虚拟内存来解决位置依赖问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#格式化打印到控制台"><span class="toc-number">1.2.</span> <span class="toc-text">格式化打印到控制台</span></a></li></ol></li></ol>
+          </div>
+      </div>
+    </div>
+
+  
+    
+
+  
+    
+  
+    
+  
+    
+
+  
+    
+  
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-left">
+      &copy; 2014 - 2020 越今朝&nbsp;|&nbsp;
+      Theme by <a href="https://github.com/giscafer/hexo-theme-cafe/" target="_blank">Cafe</a>
+    </div>
+     <div id="footer-right">
+      Contact&nbsp;|&nbsp;1029229159@qq.com
+    </div>
+  </div>
+</footer>
+ 
+<script src="/jquery/jquery.min.js"></script>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">首页</a>
+  
+    <a href="/archives" class="mobile-nav-link">归档</a>
+  
+    <a href="/about" class="mobile-nav-link">关于</a>
+  
+</nav>
+    <img class="back-to-top-btn" src="/images/fly-to-top.png"/>
+<script>
+// Elevator script included on the page, already.
+window.onload = function() {
+  var elevator = new Elevator({
+    selector:'.back-to-top-btn',
+    element: document.querySelector('.back-to-top-btn'),
+    duration: 1000 // milliseconds
+  });
+}
+</script>
+      
+
+  
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "e2fb4051c49842688ce669e634bc983f",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+    
+
+  
+
+
+
+
+
+
+
+<!-- author:forvoid begin -->
+<!-- author:forvoid begin -->
+
+<!-- author:forvoid end -->
+
+<!-- author:forvoid end -->
+
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      })
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      })
+    </script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+ 
+<script src="/js/is.js"></script>
+
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+<script src="/js/elevator.js"></script>
+
+  </div>
+</body>
+</html>
