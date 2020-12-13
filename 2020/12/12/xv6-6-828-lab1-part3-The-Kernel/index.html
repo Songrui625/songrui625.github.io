@@ -13,7 +13,7 @@
 <meta property="og:description" content="Part3 The Kernel在这个部分，我们更详细的研究JOS内核（最后还会写一些代码）。与引导加载器一样，内核从一些汇编语言代码开始，这些代码会进行设置，以便C语言代码可以正确执行。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2020-12-12T04:20:08.000Z">
-<meta property="article:modified_time" content="2020-12-12T08:14:28.921Z">
+<meta property="article:modified_time" content="2020-12-13T06:59:03.641Z">
 <meta property="article:author" content="越今朝">
 <meta property="article:tag" content="xv6">
 <meta name="twitter:card" content="summary">
@@ -159,7 +159,10 @@
 <ul>
 <li>List (in order of execution) each call to <code>cons_putc</code>, <code>va_arg</code>, and <code>vcprintf</code>. For <code>cons_putc</code>, list its argument as well. For <code>va_arg</code>, list what <code>ap</code> points to before and after the call. For <code>vcprintf</code> list the values of its two arguments.</li>
 </ul>
-<p>知道了fmt指针和ap指针的作用，我们就可以很轻松的回答这个问题。  </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">(gdb) b cons_putc</span><br><span class="line">Breakpoint 1 at 0xf01003c0: file kern/console.c, line 434.</span><br><span class="line">(gdb) b vcprintf</span><br><span class="line">Breakpoint 2 at 0xf0100a94: file kern/printf.c, line 18.</span><br><span class="line">(gdb) b lib/printfmt.c:75</span><br><span class="line">Breakpoint 3 at 0xf01011de: file lib/printfmt.c, line 75.</span><br><span class="line"></span><br><span class="line">vcprintf (fmt=0xf0101b72 <span class="string">"x %d, y %x, z %d\n"</span>, ap=0xf010ffd4 <span class="string">"\001"</span>)</span><br><span class="line">cons_putc (c=-267379853)</span><br><span class="line">cons_putc (c=-267379852)</span><br></pre></td></tr></table></figure>
+
+
+
 <p><strong>4.Run the following code.</strong></p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">unsigned</span> <span class="keyword">int</span> i = <span class="number">0x00646c72</span>;</span><br><span class="line">cprintf(<span class="string">"H%x Wo%s"</span>, <span class="number">57616</span>, &amp;i);</span><br></pre></td></tr></table></figure>
 
@@ -180,6 +183,45 @@
 
 <p><strong>6.Let’s say that GCC changed its calling convention so that it pushed arguments on the stack in declaration order, so that the last argument is pushed last. How would you have to change <code>cprintf</code> or its interface so that it would still be possible to pass it a variable number of arguments?</strong></p>
 <p>所以说C语言支持可变参数的原因正是因为参数压栈是按照从右到左的顺序。</p>
+<h3 id="栈"><a href="#栈" class="headerlink" title="栈"></a>栈</h3><p>最后这一小节将会探讨x86中C语言怎么样使用栈，而且还会在程序中实现一个有用新内核监视器函数，函数作用是打印栈的回溯：一个嵌套call指令保存的指令指针（IP）的列表，  </p>
+<blockquote>
+<p><strong>Exercise 9.</strong> Determine where the kernel initializes its stack, and exactly where in memory its stack is located. How does the kernel reserve space for its stack? And at which “end” of this reserved area is the stack pointer initialized to point to?</p>
+</blockquote>
+<p>我们知道内核加载完成后执行的第一条指令是在kern/entry.S中，我们可以到里面去找找，有没有stack的影子。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">relocated:</span><br><span class="line"></span><br><span class="line">	# <span class="function">Clear the frame pointer <span class="title">register</span> <span class="params">(EBP)</span></span></span><br><span class="line"><span class="function">	<span class="meta"># so that once we get into debugging C code,</span></span></span><br><span class="line"><span class="function">	<span class="meta"># stack backtraces will be terminated properly.</span></span></span><br><span class="line">	movl	$0x0,%ebp			# nuke frame pointer</span><br><span class="line"></span><br><span class="line">	# Set the <span class="built_in">stack</span> pointer</span><br><span class="line">	movl	$(bootstacktop),%esp</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，在跳转到C代码之前，有两条指令<code>movl    $0x0,%ebp</code> 和 <code>movl    $(bootstacktop),%esp</code>就是对栈顶指针sp进行设置，所以这就是内核初始化栈的地方。  </p>
+<p>然后我们通过再<code>obj/kern/kernel.asm</code>中找到上面两条指令.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">	<span class="comment"># Clear the frame pointer register (EBP)</span></span><br><span class="line">	<span class="comment"># so that once we get into debugging C code,</span></span><br><span class="line">	<span class="comment"># stack backtraces will be terminated properly.</span></span><br><span class="line">	movl	<span class="variable">$0x0</span>,%ebp			<span class="comment"># nuke frame pointer</span></span><br><span class="line">f010002f:	bd 00 00 00 00       	mov    <span class="variable">$0x0</span>,%ebp</span><br><span class="line"></span><br><span class="line">	<span class="comment"># Set the stack pointer</span></span><br><span class="line">	movl	$(bootstacktop),%esp</span><br><span class="line">f0100034:	bc 00 00 11 f0       	mov    <span class="variable">$0xf0110000</span>,%esp</span><br></pre></td></tr></table></figure>
+
+<p>我们可以知道栈顶在<code>$0xf0110000</code>, 我们在看回到<code>kern/entry.S</code>中的92行。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">.data</span><br><span class="line">###################################################################</span><br><span class="line"># boot stack</span><br><span class="line">###################################################################</span><br><span class="line">	.p2align	PGSHIFT		# force page alignment</span><br><span class="line">	.globl		bootstack</span><br><span class="line">bootstack:</span><br><span class="line">	.space		KSTKSIZE</span><br><span class="line">	.globl		bootstacktop   </span><br><span class="line">bootstacktop:</span><br></pre></td></tr></table></figure>
+
+<p>引导栈的过程中，首先进行了分页对齐，然后设置了栈的大小，为KSTKSIZE，我们可以去头文件<code>inc/memlayout.h</code>中找到具体大小。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> KSTKSIZE	(8*PGSIZE)   		<span class="comment">// size of a kernel stack</span></span></span><br></pre></td></tr></table></figure>
+
+<p>KSTKSIZE是八个页的大小，一个页是4KB，所以KSTKSIZE = 32KB。而栈顶地址为0xf0110000，所以栈底地址是：0xf0110000 - 0x8000(32KB) = <code>0xf0108000</code>，所以栈空间是<code>0xf0108000 ~ 0xf0110000</code>。  </p>
+<p>在x86架构机器中，堆栈指针(<code>esp</code> 寄存器)指向正在使用栈的最低位置，任何位置属于栈更低的区域都是可以使用的。  </p>
+<p>压入一个数据进栈会涉及两步：1、将减少堆栈指针的值。2、把数据放在堆栈指针所指的地址中。  </p>
+<p>弹出一个数据也涉及两步：1、读取堆栈指针所指地址的数据。2、将堆栈指针增加。  </p>
+<p>在32位保护模式下，堆栈可以存放32位的数据并且esp的值总是可以被4整除。  </p>
+<p>作为对比，ebp（基指针）寄存器主要与软件约定想关联。在一个C函数的入口，函数的序言代码通常通过将它压入栈中来保存先前函数的基指针，然后拷贝当前esp的值到ebp中，在这个函数运行期间。  </p>
+<p>如果程序中的所有函数都遵循这个约定，那么在程序执行的任何确定的位置，都可以通过跟踪所保存的ebp指针的链来回溯栈，而且还可以精确的知道函数的调用顺序。这个能力十分有用，比如，当一个特定的函数因为错误的参数传递导致了<code>assert</code>错误或者<code>panic</code>，但是你并不确定是哪个函数传递了这些错误的参数，堆栈回溯就可以帮助你找到这个冲突的函数。</p>
+<blockquote>
+<p><strong>Exercise 10.</strong> To become familiar with the C calling conventions on the x86, find the address of the <code>test_backtrace</code> function in <code>obj/kern/kernel.asm</code>, set a breakpoint there, and examine what happens each time it gets called after the kernel starts. How many 32-bit words does each recursive nesting level of <code>test_backtrace</code> push on the stack, and what are those words?</p>
+<p>Note that, for this exercise to work properly, you should be using the patched version of QEMU available on the <a href="https://pdos.csail.mit.edu/6.828/2018/tools.html" target="_blank" rel="noopener">tools</a> page or on Athena. Otherwise, you’ll have to manually translate all breakpoint and memory addresses to linear addresses.</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Test the stack backtrace function (lab 1 only)</span></span><br><span class="line"><span class="keyword">void</span></span><br><span class="line">test_backtrace(<span class="keyword">int</span> x)</span><br><span class="line">&#123;</span><br><span class="line">f0100040:	f3 <span class="number">0f</span> <span class="number">1</span>e fb          	endbr32 </span><br><span class="line">f0100044:	<span class="number">55</span>                   	push   %ebp</span><br><span class="line">f0100045:	<span class="number">89</span> e5                	mov    %esp,%ebp</span><br><span class="line">f0100047:	<span class="number">56</span>                   	push   %esi</span><br><span class="line">f0100048:	<span class="number">53</span>                   	push   %ebx</span><br><span class="line">f0100049:	e8 <span class="number">8</span>e <span class="number">01</span> <span class="number">00</span> <span class="number">00</span>       	call   f01001dc &lt;__x86.get_pc_thunk.bx&gt;</span><br><span class="line">f010004e:	<span class="number">81</span> c3 ba <span class="number">12</span> <span class="number">01</span> <span class="number">00</span>    	add    $<span class="number">0x112ba</span>,%ebx</span><br><span class="line">f0100054:	<span class="number">8b</span> <span class="number">75</span> <span class="number">08</span>             	mov    <span class="number">0x8</span>(%ebp),%esi</span><br><span class="line">	cprintf(<span class="string">"entering test_backtrace %d\n"</span>, x);</span><br><span class="line">f0100057:	<span class="number">83</span> ec <span class="number">08</span>             	sub    $<span class="number">0x8</span>,%esp</span><br><span class="line">f010005a:	<span class="number">56</span>                   	push   %esi</span><br><span class="line">f010005b:	<span class="number">8</span>d <span class="number">83</span> <span class="number">18</span> <span class="number">08</span> ff ff    	lea    <span class="number">-0xf7e8</span>(%ebx),%eax</span><br><span class="line">f0100061:	<span class="number">50</span>                   	push   %eax</span><br><span class="line">f0100062:	e8 <span class="number">36</span> <span class="number">0</span>a <span class="number">00</span> <span class="number">00</span>       	call   f0100a9d &lt;cprintf&gt;</span><br></pre></td></tr></table></figure>
+
+<p>查看test_backtrace函数的prologue的作用。  </p>
+<p>1、保存base pointer的值  </p>
+<p>2、把旧的栈顶的值设置为base pointer。  </p>
+<p>3、保存esi寄存器和ebx寄存器的值。  </p>
+<p>4、</p>
+<p>也许<code>inc/x86</code>头文件中的<code>read_ebp()</code>函数会有帮助，同时你需要将实现好的函数挂接到内核监视器的命令列表中，以便用户可以交互的调用。  </p>
+<p>回溯函数应该按下面格式显示一个栈帧的列表。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Stack backtrace:</span><br><span class="line">  ebp f0109e58  eip f0100a62  args 00000001 f0109e80 f0109e98 f0100ed2 00000031</span><br><span class="line">  ebp f0109ed8  eip f01000d6  args 00000000 00000000 f0100058 f0109f28 00000061</span><br><span class="line">  ...</span><br></pre></td></tr></table></figure>
+
 
       
     </div>
@@ -279,7 +321,7 @@
       
         <strong class="toc-title">Content</strong>
         <div class="toc-widget-list">
-              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Part3-The-Kernel"><span class="toc-number">1.</span> <span class="toc-text">Part3 The Kernel</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#使用虚拟内存来解决位置依赖问题"><span class="toc-number">1.1.</span> <span class="toc-text">使用虚拟内存来解决位置依赖问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#格式化打印到控制台"><span class="toc-number">1.2.</span> <span class="toc-text">格式化打印到控制台</span></a></li></ol></li></ol>
+              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Part3-The-Kernel"><span class="toc-number">1.</span> <span class="toc-text">Part3 The Kernel</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#使用虚拟内存来解决位置依赖问题"><span class="toc-number">1.1.</span> <span class="toc-text">使用虚拟内存来解决位置依赖问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#格式化打印到控制台"><span class="toc-number">1.2.</span> <span class="toc-text">格式化打印到控制台</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#栈"><span class="toc-number">1.3.</span> <span class="toc-text">栈</span></a></li></ol></li></ol>
           </div>
       </div>
     </div>
