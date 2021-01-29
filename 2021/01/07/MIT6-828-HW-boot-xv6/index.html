@@ -3,23 +3,20 @@
 <head>
   <meta charset="utf-8">
   
-  <title>聊聊Servlet(三)：HttpServletRequest | 越今朝的博客</title>
+  <title>MIT6.828 HW:boot xv6 | 越今朝的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="HttpServletRequest原理与应用">
+  <meta name="description" content="Boot xv6本章作业的内容是引导xv6以及理解堆栈如何进行初始化。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="聊聊Servlet(三)：HttpServletRequest">
-<meta property="og:url" content="http://songrui625.github.io/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/index.html">
+<meta property="og:title" content="MIT6.828 HW:boot xv6">
+<meta property="og:url" content="http://songrui625.github.io/2021/01/07/MIT6-828-HW-boot-xv6/index.html">
 <meta property="og:site_name" content="越今朝的博客">
-<meta property="og:description" content="HttpServletRequest原理与应用">
+<meta property="og:description" content="Boot xv6本章作业的内容是引导xv6以及理解堆栈如何进行初始化。">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="http://songrui625.github.io/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/image-20200814212449374.png">
-<meta property="og:image" content="http://songrui625.github.io/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/image-20200814212711636.png">
-<meta property="article:published_time" content="2020-08-14T13:18:21.000Z">
-<meta property="article:modified_time" content="2020-08-14T13:57:26.307Z">
+<meta property="article:published_time" content="2021-01-07T09:41:29.000Z">
+<meta property="article:modified_time" content="2021-01-07T10:15:45.754Z">
 <meta property="article:author" content="越今朝">
-<meta property="article:tag" content="javaweb">
+<meta property="article:tag" content="xv6">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://songrui625.github.io/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/image-20200814212449374.png">
   
     <link rel="alternate" href="/atom.xml" title="越今朝的博客" type="application/atom+xml">
   
@@ -74,10 +71,10 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-聊聊Servlet-三" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-MIT6-828-HW-boot-xv6" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/" class="article-date">
-  <time datetime="2020-08-14T13:18:21.000Z" itemprop="datePublished">2020-08-14</time>
+    <a href="/2021/01/07/MIT6-828-HW-boot-xv6/" class="article-date">
+  <time datetime="2021-01-07T09:41:29.000Z" itemprop="datePublished">2021-01-07</time>
 </a>
     
   </div>
@@ -88,7 +85,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      聊聊Servlet(三)：HttpServletRequest
+      MIT6.828 HW:boot xv6
     </h1>
   
 
@@ -98,43 +95,27 @@
       
         <!-- Table of Contents -->
         
-        <p>HttpServletRequest原理与应用</p>
+        <h2 id="Boot-xv6"><a href="#Boot-xv6" class="headerlink" title="Boot xv6"></a>Boot xv6</h2><p>本章作业的内容是引导xv6以及理解堆栈如何进行初始化。</p>
 <a id="more"></a>
 
-<h2 id="HttpServletRequest"><a href="#HttpServletRequest" class="headerlink" title="HttpServletRequest"></a>HttpServletRequest</h2><h3 id="1、获取请求的参数"><a href="#1、获取请求的参数" class="headerlink" title="1、获取请求的参数"></a>1、获取请求的参数</h3><p>1）获取单个参数</p>
-<p>方法：getParameter（String s）</p>
-<p>代码如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">        String woxihuan = req.getParameter(<span class="string">"woxihuan"</span>);</span><br><span class="line"><span class="comment">//        req.getParameterNames()</span></span><br><span class="line">        System.out.println(woxihuan);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Finding-and-breaking-at-an-address"><a href="#Finding-and-breaking-at-an-address" class="headerlink" title="Finding and breaking at an address"></a>Finding and breaking at an address</h2><p>找到内核的入口点，_start标号的地址。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ nm kernel | grep _start</span><br><span class="line">8010a48c D _binary_entryother_start</span><br><span class="line">8010a460 D _binary_initcode_start</span><br><span class="line">0010000c T _start</span><br></pre></td></tr></table></figure>
 
-<p>运行程序查看结果：</p>
-<p><img src="/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/image-20200814212449374.png" alt="image-20200814212449374"></p>
-<p><img src="/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/image-20200814212711636.png" alt="image-20200814212711636"></p>
-<p>2）获取多个参数</p>
-<p>接口方法：getParametersNames（String s）、getParameterMap（）</p>
-<h3 id="2、解决获取Post请求中文参数的乱码问题"><a href="#2、解决获取Post请求中文参数的乱码问题" class="headerlink" title="2、解决获取Post请求中文参数的乱码问题"></a>2、解决获取Post请求中文参数的乱码问题</h3><p>方法：setCharacterEncoding（）</p>
-<p>设置请求参数的编码格式为UTF-8。</p>
-<p><strong>注意：</strong>要在请求参数获取之前调用才生效。</p>
-<h3 id="3、请求转发"><a href="#3、请求转发" class="headerlink" title="3、请求转发"></a>3、请求转发</h3><p>服务器收到请求后，从一个资源跳转到另一个资源的行为叫做请求转发。</p>
-<p>方法：getRequestDispatcher（String uri）,forwar（req, resp）</p>
-<p>代码示例：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">    RequestDispatcher requestDispatcher = req.getRequestDispatcher(<span class="string">"/hello"</span>);</span><br><span class="line">    requestDispatcher.forward(req, resp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Exercise-What-is-on-the-stack"><a href="#Exercise-What-is-on-the-stack" class="headerlink" title="Exercise: What is on the stack?"></a>Exercise: What is on the stack?</h2><blockquote>
+<p>Where in bootasm.S is the stack pointer initialized?</p>
+</blockquote>
+<p>在bootasm.S中可以找到。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># Set up the <span class="built_in">stack</span> pointer <span class="keyword">and</span> call into C.</span><br><span class="line">movl    $start, %esp</span><br><span class="line">call    bootmain</span><br></pre></td></tr></table></figure>
 
-<p><strong>请求转发的特点：</strong></p>
-<p>1）浏览器地址栏没有发生变化</p>
-<p>2）整个过程只发送了一次HTTP请求</p>
-<p>3）共享Request域中的数据</p>
-<p>4）可以转发到WEB-INF目录下</p>
-<p>5）发生在服务器端。</p>
-<p>6）无法访问工程目录外的资源</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://songrui625.github.io/2020/08/14/%E8%81%8A%E8%81%8AServlet-%E4%B8%89/" data-id="ckduaq86c0000h4u9dxcyeo4b" class="article-share-link">Share</a>
+      <a data-url="http://songrui625.github.io/2021/01/07/MIT6-828-HW-boot-xv6/" data-id="ckkhx4z0k00029cu9fpncgi3m" class="article-share-link">Share</a>
       
       
       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/javaweb/" rel="tag">javaweb</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/xv6/" rel="tag">xv6</a></li></ul>
 
     </footer>
   </div>
@@ -186,19 +167,19 @@
     
 <nav id="article-nav">
   
-    <a href="/2020/10/30/%E4%BB%8E0%E5%BC%80%E5%A7%8B%E5%86%99DBMS/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2021/01/07/MIT6-828-HW-Shell/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
-          从零开始写DBMS:绪论
+          MIT6.828 HW:Shell
         
       </div>
     </a>
   
   
-    <a href="/2020/08/08/%E8%81%8A%E8%81%8AServlet-%E4%BA%8C/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2020/12/12/xv6-6-828-lab1-part3-The-Kernel/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">聊聊Servlet(二)：HttpRequestServlet</div>
+      <div class="article-nav-title">xv6-6.828-lab1-part3:The Kernel</div>
     </a>
   
 </nav>
@@ -234,7 +215,7 @@
       
         <strong class="toc-title">Content</strong>
         <div class="toc-widget-list">
-              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#HttpServletRequest"><span class="toc-number">1.</span> <span class="toc-text">HttpServletRequest</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1、获取请求的参数"><span class="toc-number">1.1.</span> <span class="toc-text">1、获取请求的参数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2、解决获取Post请求中文参数的乱码问题"><span class="toc-number">1.2.</span> <span class="toc-text">2、解决获取Post请求中文参数的乱码问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3、请求转发"><span class="toc-number">1.3.</span> <span class="toc-text">3、请求转发</span></a></li></ol></li></ol>
+              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Boot-xv6"><span class="toc-number">1.</span> <span class="toc-text">Boot xv6</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Finding-and-breaking-at-an-address"><span class="toc-number">2.</span> <span class="toc-text">Finding and breaking at an address</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Exercise-What-is-on-the-stack"><span class="toc-number">3.</span> <span class="toc-text">Exercise: What is on the stack?</span></a></li></ol>
           </div>
       </div>
     </div>

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>xv6-6.828-lab2-part1:Physical Page Management | 越今朝的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Lab 2: Memory ManagementIntroduction这个lab的主要任务是为JOS实现内存管理。内存管理包括两个组件：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xv6-6.828-lab2-part1:Physical Page Management">
+<meta property="og:url" content="http://songrui625.github.io/2021/01/23/xv6-6-828-lab2-part1-Physical-Page-Management/index.html">
+<meta property="og:site_name" content="越今朝的博客">
+<meta property="og:description" content="Lab 2: Memory ManagementIntroduction这个lab的主要任务是为JOS实现内存管理。内存管理包括两个组件：">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-01-23T06:40:50.000Z">
+<meta property="article:modified_time" content="2021-01-29T06:41:42.421Z">
+<meta property="article:author" content="越今朝">
+<meta property="article:tag" content="xv6">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="越今朝的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    
+    <div id="header-inner" class="inner">
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://songrui625.github.io"></form>
+      </div>
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">首页</a>
+        
+          <a class="main-nav-link" href="/archives">归档</a>
+        
+          <a class="main-nav-link" href="/about">关于</a>
+        
+      </nav>
+      
+    </div>
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">越今朝的博客</a>
+      </h1>
+      
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-xv6-6-828-lab2-part1-Physical-Page-Management" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/01/23/xv6-6-828-lab2-part1-Physical-Page-Management/" class="article-date">
+  <time datetime="2021-01-23T06:40:50.000Z" itemprop="datePublished">2021-01-23</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      xv6-6.828-lab2-part1:Physical Page Management
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- Table of Contents -->
+        
+        <h1 id="Lab-2-Memory-Management"><a href="#Lab-2-Memory-Management" class="headerlink" title="Lab 2: Memory Management"></a>Lab 2: Memory Management</h1><h2 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h2><p>这个lab的主要任务是为JOS实现内存管理。内存管理包括两个组件： </p>
+<a id="more"></a> 
+
+<p>1、内核<code>物理内存分配器(physical memory allocator)</code>：内核用它来分配和释放内存。内存分配器会按<code>4KB</code>为单位来操作，这个单位称作<code>页(page)</code>。lab的任务是<code>维护一个数据结构</code>，记录哪个物理页已经分配，哪个物理页是可用的以及每个分配的页面共享多少个进程。  </p>
+<p>2、<code>虚拟内存(Virtual Memory)</code>：由内核和用户程序将<code>虚拟地址</code>映射到<code>物理内存中的地址（物理地址）</code>。在x86中，当指令访问内存时，由硬件<code>内存管理单元（MMU）</code>执行映射，会查询一组<code>页表（Page Table）</code>，通过提供的规范来修改JOS以建立MMU的页表。  </p>
+<p>Lab2包含了下面几个新的源文件：  </p>
+<ul>
+<li><code>inc/memlayout.h</code></li>
+<li><code>kern/pmap.c</code></li>
+<li><code>kern/pmap.h</code></li>
+<li><code>kern/kclock.h</code></li>
+<li><code>kern/kclock.c</code>  </li>
+</ul>
+<p><code>memlayout.h</code>描述了虚拟地址空间的布局，我们得通过修改<code>pmap.c</code>来实现它, <code>memlayout.h</code>和<code>pmap.h</code>定义了结构体<code>PageInfo</code>（上文提到的需要维护的数据结构）来记录哪些物理页已经分配，哪些是可用的。  </p>
+<p><code>kclock.h</code>和<code>kclock.c</code>操纵PC的电池供电时钟和CMOS RAM硬件，BIOS在其中记录PC包含的物理内存大小以及其他东西。  </p>
+<p><code>pmap.c</code>的代码需要读取设备硬件来计算一共有多少物理内存，这个部分的代码已经提前为我们实现了，我们并不需要理解过多关于CMOS工作的细节。</p>
+<p>我们需要额外注意的是<code>memlayout.h</code>和<code>pmap.h</code>，因为lab需要使用到以及理解里面包含的很多定义。可能还需要看一下<code>inc/mmu.h</code>,因为里面也包含了很多对本节lab有用的定义。</p>
+<h2 id="Part1-Physical-Page-Management"><a href="#Part1-Physical-Page-Management" class="headerlink" title="Part1: Physical Page Management"></a>Part1: Physical Page Management</h2><blockquote>
+<p><strong>Exercise1.</strong> In the file <code>kern/pmap.c</code>, you must implement code for the following functions (probably in the order given).</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">boot_alloc()</span><br><span class="line">mem_init() (only up to the call to check_page_free_list(<span class="number">1</span>))</span><br><span class="line">page_init()</span><br><span class="line">page_alloc()</span><br><span class="line">page_free()</span><br></pre></td></tr></table></figure>
+
+<p><code>check_page_free_list()</code> and <code>check_page_alloc()</code> test your physical page allocator. You should boot JOS and see whether <code>check_page_alloc()</code> reports success. Fix your code so that it passes. You may find it helpful to add your own <code>assert()</code>s to verify that your assumptions are correct.  </p>
+</blockquote>
+<p>1、首先来实现<code>boot_alloc()</code>，源代码以及注释如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"> <span class="number">72</span> <span class="comment">// This simple physical memory allocator is used only while JOS is setting</span></span><br><span class="line"> <span class="number">73</span> <span class="comment">// up its virtual memory system.  page_alloc() is the real allocator.</span></span><br><span class="line"> <span class="number">74</span> <span class="comment">//</span></span><br><span class="line"> <span class="number">75</span> <span class="comment">// If n&gt;0, allocates enough pages of contiguous physical memory to hold 'n'</span></span><br><span class="line"> <span class="number">76</span> <span class="comment">// bytes.  Doesn't initialize the memory.  Returns a kernel virtual address.</span></span><br><span class="line"> <span class="number">77</span> <span class="comment">//</span></span><br><span class="line"> <span class="number">78</span> <span class="comment">// If n==0, returns the address of the next free page without allocating</span></span><br><span class="line"> <span class="number">79</span> <span class="comment">// anything.</span></span><br><span class="line"> <span class="number">80</span> <span class="comment">//</span></span><br><span class="line"> <span class="number">81</span> <span class="comment">// If we're out of memory, boot_alloc should panic.</span></span><br><span class="line"> <span class="number">82</span> <span class="comment">// This function may ONLY be used during initialization,</span></span><br><span class="line"> <span class="number">83</span> <span class="comment">// before the page_free_list list has been set up.</span></span><br><span class="line"> <span class="number">84</span> <span class="keyword">static</span> <span class="keyword">void</span> *</span><br><span class="line"> <span class="number">85</span> boot_alloc(<span class="keyword">uint32_t</span> n)</span><br><span class="line"> <span class="number">86</span> &#123;</span><br><span class="line"> <span class="number">87</span>         <span class="keyword">static</span> <span class="keyword">char</span> *nextfree;  <span class="comment">// virtual address of next byte of free memory</span></span><br><span class="line"> <span class="number">88</span>         <span class="keyword">char</span> *result;</span><br><span class="line"> <span class="number">89</span> </span><br><span class="line"> <span class="number">90</span>         <span class="comment">// Initialize nextfree if this is the first time.</span></span><br><span class="line"> <span class="number">91</span>         <span class="comment">// 'end' is a magic symbol automatically generated by the linker,</span></span><br><span class="line"> <span class="number">92</span>         <span class="comment">// which points to the end of the kernel's bss segment:</span></span><br><span class="line"> <span class="number">93</span>         <span class="comment">// the first virtual address that the linker did *not* assign</span></span><br><span class="line"> <span class="number">94</span>         <span class="comment">// to any kernel code or global variables.</span></span><br><span class="line"> <span class="number">95</span>         <span class="keyword">if</span> (!nextfree) &#123;</span><br><span class="line"> <span class="number">96</span>                 <span class="keyword">extern</span> <span class="keyword">char</span> <span class="built_in">end</span>[];</span><br><span class="line"> <span class="number">97</span>                 nextfree = ROUNDUP((<span class="keyword">char</span> *) <span class="built_in">end</span>, PGSIZE);</span><br><span class="line"> <span class="number">98</span>         &#125;</span><br><span class="line"> <span class="number">99</span> </span><br><span class="line"><span class="number">100</span>         <span class="comment">// Allocate a chunk large enough to hold 'n' bytes, then update</span></span><br><span class="line"><span class="number">101</span>         <span class="comment">// nextfree.  Make sure nextfree is kept aligned</span></span><br><span class="line"><span class="number">102</span>         <span class="comment">// to a multiple of PGSIZE.</span></span><br><span class="line"><span class="number">103</span>         <span class="comment">//</span></span><br><span class="line"><span class="number">104</span>         <span class="comment">// LAB 2: Your code here.</span></span><br><span class="line"><span class="number">112</span>         <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line"><span class="number">113</span> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个函数的作用很简单，就是在没有建立真正的内存分配器之前，分配指定字节数的内存，返回下一个可用的地址（虚拟地址）。  </p>
+<p>但是我觉得注释有点说的不清不楚，让我困惑了好久，可能是我比较菜的原因吧(T~T)。  </p>
+<p>需要理解的几个点：<code>nextfree</code>, <code>end</code>，<code>ROUNDUP宏</code>, 参数<code>n</code>, <code>PGSIZE</code>，逐一解释：  </p>
+<p><code>nextfree</code>: 下一个可用的虚拟地址  。</p>
+<p><code>ene</code>：函数里面的注释是 由链接器自动生成的魔数（magic symbol），指向内核 bss 段的末尾。而bss段的末尾就是第一个可用的虚拟地址，它没有被链接器分配给任何内核代码以及全局变量。<strong>这里我是有疑惑的：为什么内核bss段的末尾就是第一个可用的虚拟地址？</strong></p>
+<p><code>PGSIZE</code>：4KB（4096 Byte）,一页的字节数，现代计算机里都是用字节寻址的，但是在内存管理中，都是按页作为单位，也就是说OS分配内存，都是分配几页几页，释放几页几页，而不是分配几个字节几个字节。并且页与页之间是<code>contiguous</code>的，也就是相邻的，第一页的最后一一个字节的下一个字节就是第二页的第一个字节。（这里请区别和malloc的不同，malloc允许用户分配指定字节大小的内存，但是其实OS会自动转换为分配为页的整数倍内存，何况我们现在还没有实现malloc）</p>
+<p><code>ROUNDUP</code>：向上取整为<code>PGSIZE</code>的倍数。由于内存分配是按页来做单位的，如果我们函数传进来的字节数不足一页（4KB），那如何计算呢？正是用<code>ROUNDUP</code>这个宏，详细定义在<code>inc/types.h</code>中。</p>
+<p><code>n</code>：需要分配的字节数，当n不是<code>PGSIZE</code>的整数倍时，需要用<code>ROUNDUP</code>宏进行取整。</p>
+<p>理解了上面几个概念后就可以开始实现了, 查看下注释</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">100</span>  <span class="comment">// Allocate a chunk large enough to hold 'n' bytes, then update</span></span><br><span class="line"><span class="number">101</span>  <span class="comment">// nextfree.  Make sure nextfree is kept aligned</span></span><br><span class="line"><span class="number">102</span>  <span class="comment">// to a multiple of PGSIZE.</span></span><br></pre></td></tr></table></figure>
+
+<p>其实这里提到的 <code>a chunk large enough to hold &#39;n&#39; bytes</code>的意思就是分配 一个<code>PGSIZE</code>整数倍的块， 并且后面也有提示：<code>Make sure nextfree is kept aligned to a multiple of PGSIZE.</code></p>
+<p>实现如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">104</span>         <span class="comment">// LAB 2: Your code here.</span></span><br><span class="line">     		<span class="comment">// If n==0, returns the address of the next free page without allocating</span></span><br><span class="line"> 	  		<span class="comment">// anything.</span></span><br><span class="line"><span class="number">105</span>         <span class="keyword">if</span> (n == <span class="number">0</span>) <span class="keyword">return</span> nextfree;</span><br><span class="line"><span class="number">106</span>         result = nextfree;</span><br><span class="line">			<span class="comment">// Allocate a chunk large enough to hold 'n' bytes, then update</span></span><br><span class="line">	  		<span class="comment">// nextfree. Make sure nextfree is kept aligned to a muliple of PGSIZE</span></span><br><span class="line"><span class="number">107</span>         nextfree += ROUNDUP(n, PGSIZE);</span><br><span class="line"><span class="number">108</span> 		<span class="comment">// If we're out of memory, boot_alloc should panic</span></span><br><span class="line"><span class="number">109</span>         <span class="keyword">if</span> ((nextfree - KERNBASE) &gt;= <span class="number">0x400000</span>) &#123;</span><br><span class="line"><span class="number">110</span>                 <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">"out of memory in address: %s\n"</span>, nextfree);</span><br><span class="line"><span class="number">111</span>         &#125;</span><br><span class="line"><span class="number">112</span>         <span class="keyword">return</span> result;</span><br></pre></td></tr></table></figure>
+
+<p><strong>这里我还有一些疑问：为什么是返回一个可用的虚拟地址（其实按理来说没问题，因为分配内存接口就是应该返回下一个可用内存的地址），不是说内核需要记录哪一些内存已经被使用了，哪些内存是可用的吗？那已经被使用的内存在哪里可以找到呢？我最初的想法是返回一个内核地址空间基地址（零地址），现在想想好像有点离谱。</strong></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://songrui625.github.io/2021/01/23/xv6-6-828-lab2-part1-Physical-Page-Management/" data-id="ckkhx4z0i00019cu96cmkdz72" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/xv6/" rel="tag">xv6</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+ 
+<script src="/jquery/jquery.min.js"></script>
+
+  <div id="random_posts">
+    <h2>Recommended Posts</h2>
+    <div class="random_posts_ul">
+      <script>
+          var random_count =4
+          var site = {BASE_URI:'/'};
+          function load_random_posts(obj) {
+              var arr=site.posts;
+              if (!obj) return;
+              // var count = $(obj).attr('data-count') || 6;
+              for (var i, tmp, n = arr.length; n; i = Math.floor(Math.random() * n), tmp = arr[--n], arr[n] = arr[i], arr[i] = tmp);
+              arr = arr.slice(0, random_count);
+              var html = '<ul>';
+            
+              for(var j=0;j<arr.length;j++){
+                var item=arr[j];
+                html += '<li><strong>' + 
+                item.date + ':&nbsp;&nbsp;<a href="' + (site.BASE_URI+item.uri) + '">' + 
+                (item.title || item.uri) + '</a></strong>';
+                if(item.excerpt){
+                  html +='<div class="post-excerpt">'+item.excerpt+'</div>';
+                }
+                html +='</li>';
+                
+              }
+              $(obj).html(html + '</ul>');
+          }
+          $('.random_posts_ul').each(function () {
+              var c = this;
+              if (!site.posts || !site.posts.length){
+                  $.getJSON(site.BASE_URI + 'js/posts.js',function(json){site.posts = json;load_random_posts(c)});
+              } 
+               else{
+                load_random_posts(c);
+              }
+          });
+      </script>
+    </div>
+  </div>
+
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2021/01/07/MIT6-828-HW-Shell/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">MIT6.828 HW:Shell</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+ 
+     
+  <div class="comments" id="comments">
+    
+     
+       
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+       
+      
+      
+  </div>
+ 
+  
+
+</section>
+           
+    <aside id="sidebar">
+  
+    
+
+  
+    
+    <div class="widget-wrap">
+    
+      <div class="widget" id="toc-widget-fixed">
+      
+        <strong class="toc-title">Content</strong>
+        <div class="toc-widget-list">
+              <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-2-Memory-Management"><span class="toc-number">1.</span> <span class="toc-text">Lab 2: Memory Management</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Introduction"><span class="toc-number">1.1.</span> <span class="toc-text">Introduction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Part1-Physical-Page-Management"><span class="toc-number">1.2.</span> <span class="toc-text">Part1: Physical Page Management</span></a></li></ol></li></ol>
+          </div>
+      </div>
+    </div>
+
+  
+    
+
+  
+    
+  
+    
+  
+    
+
+  
+    
+  
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-left">
+      &copy; 2014 - 2021 越今朝&nbsp;|&nbsp;
+      Theme by <a href="https://github.com/giscafer/hexo-theme-cafe/" target="_blank">Cafe</a>
+    </div>
+     <div id="footer-right">
+      Contact&nbsp;|&nbsp;1029229159@qq.com
+    </div>
+  </div>
+</footer>
+ 
+<script src="/jquery/jquery.min.js"></script>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">首页</a>
+  
+    <a href="/archives" class="mobile-nav-link">归档</a>
+  
+    <a href="/about" class="mobile-nav-link">关于</a>
+  
+</nav>
+    <img class="back-to-top-btn" src="/images/fly-to-top.png"/>
+<script>
+// Elevator script included on the page, already.
+window.onload = function() {
+  var elevator = new Elevator({
+    selector:'.back-to-top-btn',
+    element: document.querySelector('.back-to-top-btn'),
+    duration: 1000 // milliseconds
+  });
+}
+</script>
+      
+
+  
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "e2fb4051c49842688ce669e634bc983f",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+    
+
+  
+
+
+
+
+
+
+
+<!-- author:forvoid begin -->
+<!-- author:forvoid begin -->
+
+<!-- author:forvoid end -->
+
+<!-- author:forvoid end -->
+
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      })
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      })
+    </script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+ 
+<script src="/js/is.js"></script>
+
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+<script src="/js/elevator.js"></script>
+
+  </div>
+</body>
+</html>
