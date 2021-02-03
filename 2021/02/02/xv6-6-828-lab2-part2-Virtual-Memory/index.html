@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>xv6-6.828-lab2-part2:Virtual Memory | 越今朝的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Part 2: Virtual Memory在开始这个part之前，需要熟悉x86保护模式下的内存管理机制：分段和分页。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xv6-6.828-lab2-part2:Virtual Memory">
+<meta property="og:url" content="http://songrui625.github.io/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/index.html">
+<meta property="og:site_name" content="越今朝的博客">
+<meta property="og:description" content="Part 2: Virtual Memory在开始这个part之前，需要熟悉x86保护模式下的内存管理机制：分段和分页。">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://songrui625.github.io/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/D:%5CSongrui625%5Chexo%5Csource_posts%5Cxv6-6-828-lab2-part2-Virtual-Memory%5Cimage-20210203124318815.png">
+<meta property="og:image" content="http://songrui625.github.io/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/D:%5CSongrui625%5Chexo%5Csource_posts%5Cxv6-6-828-lab2-part2-Virtual-Memory%5Cimage-20210203124145016.png">
+<meta property="article:published_time" content="2021-02-01T16:01:01.000Z">
+<meta property="article:modified_time" content="2021-02-03T04:58:17.070Z">
+<meta property="article:author" content="越今朝">
+<meta property="article:tag" content="xv6">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://songrui625.github.io/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/D:%5CSongrui625%5Chexo%5Csource_posts%5Cxv6-6-828-lab2-part2-Virtual-Memory%5Cimage-20210203124318815.png">
+  
+    <link rel="alternate" href="/atom.xml" title="越今朝的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    
+    <div id="header-inner" class="inner">
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://songrui625.github.io"></form>
+      </div>
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">首页</a>
+        
+          <a class="main-nav-link" href="/archives">归档</a>
+        
+          <a class="main-nav-link" href="/about">关于</a>
+        
+      </nav>
+      
+    </div>
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">越今朝的博客</a>
+      </h1>
+      
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-xv6-6-828-lab2-part2-Virtual-Memory" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/" class="article-date">
+  <time datetime="2021-02-01T16:01:01.000Z" itemprop="datePublished">2021-02-02</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      xv6-6.828-lab2-part2:Virtual Memory
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- Table of Contents -->
+        
+        <h1 id="Part-2-Virtual-Memory"><a href="#Part-2-Virtual-Memory" class="headerlink" title="Part 2: Virtual Memory"></a>Part 2: Virtual Memory</h1><p>在开始这个part之前，需要熟悉x86保护模式下的内存管理机制：分段和分页。</p>
+<a id="more"></a>
+
+<blockquote>
+<p><strong>Exercise 2.</strong> Look at chapters 5 and 6 of the <a href="https://pdos.csail.mit.edu/6.828/2018/readings/i386/toc.htm" target="_blank" rel="noopener">Intel 80386 Reference Manual</a>, if you haven’t done so already. Read the sections about page translation and page-based protection closely (5.2 and 6.4). We recommend that you also skim the sections about segmentation; while JOS uses the paging hardware for virtual memory and protection, segment translation and segment-based protection cannot be disabled on the x86, so you will need a basic understanding of it.</p>
+</blockquote>
+<p><strong>一定要去看80386的参考手册，一定要看5.2节和6.4节</strong></p>
+<h2 id="Virtual-Linear-and-Physical-Addresses"><a href="#Virtual-Linear-and-Physical-Addresses" class="headerlink" title="Virtual, Linear, and Physical Addresses"></a>Virtual, Linear, and Physical Addresses</h2><p>在x86架构术语里，虚拟地址(<code>virtual address</code>)包括一个段选择器(<code>segment selector</code>)和一个偏移量(<code>offset</code>)。线性地址(<code>linear address</code>)是在段翻译之后得到的。物理地址(<code>physical address</code>)是在页翻译后得到的，最后会在总线上传到RAM。  </p>
+<p>C指针是虚拟地址的<code>offset</code>部分，在<code>boot/boot.S</code>中，我们建立了<code>全局描述符表(GDT)</code>，它可以通过设置所有的段基地址到0，范围到0xffffffff来关闭分段翻译。因此段选择器不会生效而且线性地址总是等于虚拟地址的偏移量，也就是说我们可以不去考虑线性地址，甚至不用去考虑段选择器，直接将指针看作线性地址就行，默认虚拟地址等于线性地址。在lab3中会与分段进行更多的打交道来设置特权级。但至于内存翻译，在所有labs中，我们可以忽略分段而专注于分页。  </p>
+<p>回想下lab1的part3，我们建立了一个简单的页表，这样内核可以在链接地址0xf0100000上运行代码，即使它实际上是被加载到物理内存ROM BIOS上地址为0x00100000。这个页表仅仅映射了4MB的的内存。在这个lab中，我们会做一下拓展，映射从虚拟地址0xf0000000开始的256MB字节内存，并且映射虚拟地址空间中的许多其他区域。  </p>
+<p>一旦进入到实模式，就无法直接使用线性或者物理地址，所有的内存引用都会被解释为虚拟地址然后被MMU进行翻译，这意味着<strong>C语言中所有的指针都是虚拟地址</strong>。  </p>
+<p>JOS 内核定义了两种地址<code>uintptr_t：虚拟地址</code>和<code>phyaddr_t:物理地址</code>，它们都是<code>uint32_t</code>的同义词，意味着它们都是整数，不是指针，不可以被解引用，但是强制转换为指针后是可以解引用的。物理地址解引用后得到的地址并不能真正的向其读和写，等等就会介绍为什么。</p>
+<blockquote>
+<p><strong>Question1</strong> Assuming that the following JOS kernel code is correct, what type should variable <code>x</code> have, <code>uintptr_t</code> or <code>physaddr_t</code>?</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">mystery_t</span> x;</span><br><span class="line"><span class="keyword">char</span>* value = return_a_pointer();</span><br><span class="line">*value = <span class="number">10</span>;</span><br><span class="line">x = (<span class="keyword">mystery_t</span>) value;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>这题应该已经可以一秒钟回答了，因为C语言中指针都是虚拟地址。接下来介绍两种转换：1、物理地址转换为虚拟地址（以及为什么）。2、虚拟地址转换为物理地址。  </p>
+<p>有时内核需要修改或读取或者修改它仅知道的物理地址的内存。比如，向页表添加映射可能需要分配物理内存来存储<code>页目录(page directory)</code>，然后初始化该内存。但是内核是无法绕过虚拟地址翻译这一环节的，也就是说你无法直接从物理地址处的内存读和写数据。那怎么才能实现向已知的物理地址内存读和写数据呢，必须通过虚拟地址，lab提供了一些有用的宏帮助我们进行<strong>物理地址向虚拟地址的映射</strong>。JOS将所有从0开始的物理地址映射到虚拟地址0xf0000000，这是为了在仅知道物理情况下帮助内核读写物理地址对应内存（映射之后，通过MMU将虚拟地址再翻译成物理地址传到总线上读写内存，虽有有点啰嗦，但是必须这么做）。物理内存转换为虚拟地址具体方法就是：内核的物理地址必须加上0xf0000000，这里其实是线性映射，y(x) = x + 0xf0000000, x就是内核的物理地址，y就是对应的虚拟地址。你也可以通过<code>宏KADDR(pa)</code>进行这种加法运算。  </p>
+<p>内核有时又需要在仅知道虚拟地址（存储在某种内核数据结构）的情况下找到它的对应的物理地址，<code>boot_alloc()</code>分配的全局变量和内存位于从0xf0000000开始的内核加载区域中，就是我们映射的所有的物理内存区域。因此，要将该区域中的虚拟地址转换为物理地址，只需要做相反的操作：将虚拟地址减去0xf0000000，就可以得到对应的物理地址，只是和物理地址映射到虚拟地址相反的操作。你可以使用<code>宏PADDR(va)</code>进行这种减法运算。</p>
+<h2 id="Reference-counting"><a href="#Reference-counting" class="headerlink" title="Reference counting"></a>Reference counting</h2><p>接下来的lab你会经常在多个虚拟地址上同时映射相同的物理页，你需要维护对应每个物理页的结构体<code>struct PageInfo</code>中的一个字段<code>pp_ref</code>的引用计数值。当一个物理页<code>pp_ref</code>的值为0时，该页面就可以被释放了，因为不会再被使用到（和GC中的引用计数思想一样），通常这个计数值应该等于所有页表中物理页出现在<code>UTOP</code>下方的次数，因为<code>UTOP</code>上方的映射大多数是在内核启动时设置的，永远都不会被释放，所以无需引用计数。<code>pp_ref</code>还用来跟踪指向页目录页面指针的数量。  </p>
+<p>当使用<code>page_alloc</code>函数时务必当心，它的返回页面的计数值永远为0，所以在你操作完返回的页面后（比如将这页插入一个页表），<code>pp_ref</code>的值应该尽快的增加，有时候这是由其他函数操作的（比如，<code>page_insert</code>），而有时调用<code>page_alloc</code>必须直接增加计数。  </p>
+<h2 id="Page-Table-Management"><a href="#Page-Table-Management" class="headerlink" title="Page Table Management"></a>Page Table Management</h2><p>现在，你将编写一系列函数来管理页表，插入或者删除 线性到物理地址 的映射， 在必要时创建页表等等功能。</p>
+<blockquote>
+<p><strong>Exercise 4.</strong> In the file <code>kern/pmap.c</code>, you must implement code for the following functions.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">pgdir_walk()</span><br><span class="line">boot_map_region()</span><br><span class="line">page_lookup()</span><br><span class="line">page_remove()</span><br><span class="line">page_insert()</span><br></pre></td></tr></table></figure>
+
+<p><code>check_page()</code>, called from <code>mem_init()</code>, tests your page table management routines. You should make sure it reports success before proceeding.</p>
+</blockquote>
+<p><strong>pgdir_walk()</strong>:</p>
+<p><strong>argument</strong>:1.pgdir: 页目录的虚拟地址 2.va: 虚拟地址 3.create: 页表为空时是否创建页表，true为创建，false为不创建。</p>
+<p><strong>return</strong>:指向va对应页表项(entry可以翻译为条目或者项)的指针。  </p>
+<p>在x86中，虚拟地址va的格式与翻译过程如下：</p>
+<p><img src="/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/D:%5CSongrui625%5Chexo%5Csource_posts%5Cxv6-6-828-lab2-part2-Virtual-Memory%5Cimage-20210203124318815.png" alt="image-20210203124318815"></p>
+<p><img src="/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/D:%5CSongrui625%5Chexo%5Csource_posts%5Cxv6-6-828-lab2-part2-Virtual-Memory%5Cimage-20210203124145016.png" alt="image-20210203124145016"></p>
+<p>理解了以上两张图的内容后，还需要了解<code>mmu.h</code>头文件中的几个宏:<code>PDX(la)</code>, <code>PTX(la)</code>, <code>PTE_ADDR(pte)</code>, <code>PTE_U</code>, <code>PTE_W</code>, <code>PTE_P</code>，以及头文件<code>pmap.h</code>中的函数<code>page2pa</code>. 需要提一下的是，在JOS中虚拟地址va可以看作于线性地址la，前文已经描述过了，<code>mmu.h</code>中也有提及。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Given 'pgdir', a pointer to a page directory, pgdir_walk returns</span></span><br><span class="line"><span class="comment">// a pointer to the page table entry (PTE) for linear address 'va'.</span></span><br><span class="line"><span class="comment">// This requires walking the two-level page table structure.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// The relevant page table page might not exist yet.</span></span><br><span class="line"><span class="comment">// If this is true, and create == false, then pgdir_walk returns NULL.</span></span><br><span class="line"><span class="comment">// Otherwise, pgdir_walk allocates a new page table page with page_alloc.</span></span><br><span class="line"><span class="comment">//    - If the allocation fails, pgdir_walk returns NULL.</span></span><br><span class="line"><span class="comment">//    - Otherwise, the new page's reference count is incremented,</span></span><br><span class="line"><span class="comment">//	the page is cleared,</span></span><br><span class="line"><span class="comment">//	and pgdir_walk returns a pointer into the new page table page.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// Hint 1: you can turn a PageInfo * into the physical address of the</span></span><br><span class="line"><span class="comment">// page it refers to with page2pa() from kern/pmap.h.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// Hint 2: the x86 MMU checks permission bits in both the page directory</span></span><br><span class="line"><span class="comment">// and the page table, so it's safe to leave permissions in the page</span></span><br><span class="line"><span class="comment">// directory more permissive than strictly necessary.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// Hint 3: look at inc/mmu.h for useful macros that manipulate page</span></span><br><span class="line"><span class="comment">// table and page directory entries.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="keyword">pte_t</span> *</span><br><span class="line">pgdir_walk(<span class="keyword">pde_t</span> *pgdir, <span class="keyword">const</span> <span class="keyword">void</span> *va, <span class="keyword">int</span> create)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">// Fill this function in</span></span><br><span class="line">	<span class="keyword">int</span> pdx = PDX(va);</span><br><span class="line">	<span class="keyword">int</span> ptx = PTX(va);</span><br><span class="line">	<span class="keyword">pde_t</span> *pde = &amp;pgdir[pdx];</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!(*pde &amp; PTE_P)) &#123; <span class="comment">//check if pde exist</span></span><br><span class="line">		<span class="keyword">if</span> (!create) <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">PageInfo</span> *<span class="title">pp</span> = <span class="title">page_alloc</span>(<span class="title">ALLOC_ZERO</span>);</span></span><br><span class="line">		<span class="keyword">if</span> (!pp) <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">		pp-&gt;pp_ref++;</span><br><span class="line">		*pde = page2pa(pp) | PTE_P | PTE_U | PTE_W;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> (<span class="keyword">pte_t</span> *) KADDR(PTE_ADDR(*pde)) + PTX(va);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://songrui625.github.io/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/" data-id="ckkoynec20000nwu9ebil028w" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/xv6/" rel="tag">xv6</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+ 
+<script src="/jquery/jquery.min.js"></script>
+
+  <div id="random_posts">
+    <h2>Recommended Posts</h2>
+    <div class="random_posts_ul">
+      <script>
+          var random_count =4
+          var site = {BASE_URI:'/'};
+          function load_random_posts(obj) {
+              var arr=site.posts;
+              if (!obj) return;
+              // var count = $(obj).attr('data-count') || 6;
+              for (var i, tmp, n = arr.length; n; i = Math.floor(Math.random() * n), tmp = arr[--n], arr[n] = arr[i], arr[i] = tmp);
+              arr = arr.slice(0, random_count);
+              var html = '<ul>';
+            
+              for(var j=0;j<arr.length;j++){
+                var item=arr[j];
+                html += '<li><strong>' + 
+                item.date + ':&nbsp;&nbsp;<a href="' + (site.BASE_URI+item.uri) + '">' + 
+                (item.title || item.uri) + '</a></strong>';
+                if(item.excerpt){
+                  html +='<div class="post-excerpt">'+item.excerpt+'</div>';
+                }
+                html +='</li>';
+                
+              }
+              $(obj).html(html + '</ul>');
+          }
+          $('.random_posts_ul').each(function () {
+              var c = this;
+              if (!site.posts || !site.posts.length){
+                  $.getJSON(site.BASE_URI + 'js/posts.js',function(json){site.posts = json;load_random_posts(c)});
+              } 
+               else{
+                load_random_posts(c);
+              }
+          });
+      </script>
+    </div>
+  </div>
+
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2021/01/23/xv6-6-828-lab2-part1-Physical-Page-Management/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">xv6-6.828-lab2-part1:Physical Page Management</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+ 
+     
+  <div class="comments" id="comments">
+    
+     
+       
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+       
+      
+      
+  </div>
+ 
+  
+
+</section>
+           
+    <aside id="sidebar">
+  
+    
+
+  
+    
+    <div class="widget-wrap">
+    
+      <div class="widget" id="toc-widget-fixed">
+      
+        <strong class="toc-title">Content</strong>
+        <div class="toc-widget-list">
+              <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Part-2-Virtual-Memory"><span class="toc-number">1.</span> <span class="toc-text">Part 2: Virtual Memory</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Virtual-Linear-and-Physical-Addresses"><span class="toc-number">1.1.</span> <span class="toc-text">Virtual, Linear, and Physical Addresses</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Reference-counting"><span class="toc-number">1.2.</span> <span class="toc-text">Reference counting</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Page-Table-Management"><span class="toc-number">1.3.</span> <span class="toc-text">Page Table Management</span></a></li></ol></li></ol>
+          </div>
+      </div>
+    </div>
+
+  
+    
+
+  
+    
+  
+    
+  
+    
+
+  
+    
+  
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-left">
+      &copy; 2014 - 2021 越今朝&nbsp;|&nbsp;
+      Theme by <a href="https://github.com/giscafer/hexo-theme-cafe/" target="_blank">Cafe</a>
+    </div>
+     <div id="footer-right">
+      Contact&nbsp;|&nbsp;1029229159@qq.com
+    </div>
+  </div>
+</footer>
+ 
+<script src="/jquery/jquery.min.js"></script>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">首页</a>
+  
+    <a href="/archives" class="mobile-nav-link">归档</a>
+  
+    <a href="/about" class="mobile-nav-link">关于</a>
+  
+</nav>
+    <img class="back-to-top-btn" src="/images/fly-to-top.png"/>
+<script>
+// Elevator script included on the page, already.
+window.onload = function() {
+  var elevator = new Elevator({
+    selector:'.back-to-top-btn',
+    element: document.querySelector('.back-to-top-btn'),
+    duration: 1000 // milliseconds
+  });
+}
+</script>
+      
+
+  
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "e2fb4051c49842688ce669e634bc983f",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+    
+
+  
+
+
+
+
+
+
+
+<!-- author:forvoid begin -->
+<!-- author:forvoid begin -->
+
+<!-- author:forvoid end -->
+
+<!-- author:forvoid end -->
+
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      })
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      })
+    </script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+ 
+<script src="/js/is.js"></script>
+
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+<script src="/js/elevator.js"></script>
+
+  </div>
+</body>
+</html>
