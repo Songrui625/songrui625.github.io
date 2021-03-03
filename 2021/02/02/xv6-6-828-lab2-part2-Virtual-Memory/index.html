@@ -5,18 +5,18 @@
   
   <title>xv6-6.828-lab2-part2:Virtual Memory | 越今朝的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Part 2: Virtual Memory在开始这个part之前，需要熟悉x86保护模式下的内存管理机制：分段和分页。">
+  <meta name="description" content="在开始这个part之前，需要熟悉x86保护模式下的内存管理机制：分段和分页。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="xv6-6.828-lab2-part2:Virtual Memory">
 <meta property="og:url" content="http://songrui625.github.io/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/index.html">
 <meta property="og:site_name" content="越今朝的博客">
-<meta property="og:description" content="Part 2: Virtual Memory在开始这个part之前，需要熟悉x86保护模式下的内存管理机制：分段和分页。">
+<meta property="og:description" content="在开始这个part之前，需要熟悉x86保护模式下的内存管理机制：分段和分页。">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="http://songrui625.github.io/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/D:%5CSongrui625%5Chexo%5Csource_posts%5Cxv6-6-828-lab2-part2-Virtual-Memory%5Cimage-20210203124318815.png">
 <meta property="og:image" content="http://songrui625.github.io/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/D:%5CSongrui625%5Chexo%5Csource_posts%5Cxv6-6-828-lab2-part2-Virtual-Memory%5Cimage-20210203124145016.png">
 <meta property="og:image" content="file://D:/Songrui625/hexo/source/_posts/xv6-6-828-lab2-part2-Virtual-Memory/image-20210204111129901.png?lastModify=1612412610">
 <meta property="article:published_time" content="2021-02-01T16:01:01.000Z">
-<meta property="article:modified_time" content="2021-02-04T05:33:56.719Z">
+<meta property="article:modified_time" content="2021-03-03T15:36:36.956Z">
 <meta property="article:author" content="越今朝">
 <meta property="article:tag" content="xv6">
 <meta name="twitter:card" content="summary">
@@ -99,7 +99,7 @@
       
         <!-- Table of Contents -->
         
-        <h1 id="Part-2-Virtual-Memory"><a href="#Part-2-Virtual-Memory" class="headerlink" title="Part 2: Virtual Memory"></a>Part 2: Virtual Memory</h1><p>在开始这个part之前，需要熟悉x86保护模式下的内存管理机制：分段和分页。</p>
+        <p>在开始这个part之前，需要熟悉x86保护模式下的内存管理机制：分段和分页。</p>
 <a id="more"></a>
 
 <blockquote>
@@ -242,7 +242,7 @@
       
         <strong class="toc-title">Content</strong>
         <div class="toc-widget-list">
-              <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Part-2-Virtual-Memory"><span class="toc-number">1.</span> <span class="toc-text">Part 2: Virtual Memory</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Virtual-Linear-and-Physical-Addresses"><span class="toc-number">1.1.</span> <span class="toc-text">Virtual, Linear, and Physical Addresses</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Reference-counting"><span class="toc-number">1.2.</span> <span class="toc-text">Reference counting</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Page-Table-Management"><span class="toc-number">1.3.</span> <span class="toc-text">Page Table Management</span></a></li></ol></li></ol>
+              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Virtual-Linear-and-Physical-Addresses"><span class="toc-number">1.</span> <span class="toc-text">Virtual, Linear, and Physical Addresses</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Reference-counting"><span class="toc-number">2.</span> <span class="toc-text">Reference counting</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Page-Table-Management"><span class="toc-number">3.</span> <span class="toc-text">Page Table Management</span></a></li></ol>
           </div>
       </div>
     </div>

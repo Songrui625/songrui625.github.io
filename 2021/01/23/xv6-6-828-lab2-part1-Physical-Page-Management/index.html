@@ -5,15 +5,15 @@
   
   <title>xv6-6.828-lab2-part1:Physical Page Management | 越今朝的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Lab 2: Memory ManagementIntroduction这个lab的主要任务是为JOS实现内存管理。内存管理包括两个组件：">
+  <meta name="description" content="Introduction这个lab的主要任务是为JOS实现内存管理。内存管理包括两个组件： 1、供kernel使用的physical memory allocator。2、virtual memory。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="xv6-6.828-lab2-part1:Physical Page Management">
 <meta property="og:url" content="http://songrui625.github.io/2021/01/23/xv6-6-828-lab2-part1-Physical-Page-Management/index.html">
 <meta property="og:site_name" content="越今朝的博客">
-<meta property="og:description" content="Lab 2: Memory ManagementIntroduction这个lab的主要任务是为JOS实现内存管理。内存管理包括两个组件：">
+<meta property="og:description" content="Introduction这个lab的主要任务是为JOS实现内存管理。内存管理包括两个组件： 1、供kernel使用的physical memory allocator。2、virtual memory。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-01-23T06:40:50.000Z">
-<meta property="article:modified_time" content="2021-01-29T06:41:42.421Z">
+<meta property="article:modified_time" content="2021-03-03T15:35:43.903Z">
 <meta property="article:author" content="越今朝">
 <meta property="article:tag" content="xv6">
 <meta name="twitter:card" content="summary">
@@ -95,7 +95,7 @@
       
         <!-- Table of Contents -->
         
-        <h1 id="Lab-2-Memory-Management"><a href="#Lab-2-Memory-Management" class="headerlink" title="Lab 2: Memory Management"></a>Lab 2: Memory Management</h1><h2 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h2><p>这个lab的主要任务是为JOS实现内存管理。内存管理包括两个组件： </p>
+        <h2 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h2><p>这个lab的主要任务是为JOS实现内存管理。内存管理包括两个组件： 1、供kernel使用的physical memory allocator。2、virtual memory。</p>
 <a id="more"></a> 
 
 <p>1、内核<code>物理内存分配器(physical memory allocator)</code>：内核用它来分配和释放内存。内存分配器会按<code>4KB</code>为单位来操作，这个单位称作<code>页(page)</code>。lab的任务是<code>维护一个数据结构</code>，记录哪个物理页已经分配，哪个物理页是可用的以及每个分配的页面共享多少个进程。  </p>
@@ -245,7 +245,7 @@
       
         <strong class="toc-title">Content</strong>
         <div class="toc-widget-list">
-              <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-2-Memory-Management"><span class="toc-number">1.</span> <span class="toc-text">Lab 2: Memory Management</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Introduction"><span class="toc-number">1.1.</span> <span class="toc-text">Introduction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Part1-Physical-Page-Management"><span class="toc-number">1.2.</span> <span class="toc-text">Part1: Physical Page Management</span></a></li></ol></li></ol>
+              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Introduction"><span class="toc-number">1.</span> <span class="toc-text">Introduction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Part1-Physical-Page-Management"><span class="toc-number">2.</span> <span class="toc-text">Part1: Physical Page Management</span></a></li></ol>
           </div>
       </div>
     </div>
