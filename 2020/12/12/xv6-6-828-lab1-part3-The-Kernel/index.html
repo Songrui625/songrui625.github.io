@@ -5,15 +5,15 @@
   
   <title>xv6-6.828-lab1-part3:The Kernel | 越今朝的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Part3 The Kernel在这个部分，我们更详细的研究JOS内核（最后还会写一些代码）。与引导加载器一样，内核从一些汇编语言代码开始，这些代码会进行设置，以便C语言代码可以正确执行。">
+  <meta name="description" content="在这个部分，我们更详细的研究JOS内核（最后还会写一些代码）。与引导加载器一样，内核从一些汇编语言代码开始，这些代码会进行设置，以便C语言代码可以正确执行。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="xv6-6.828-lab1-part3:The Kernel">
 <meta property="og:url" content="http://songrui625.github.io/2020/12/12/xv6-6-828-lab1-part3-The-Kernel/index.html">
 <meta property="og:site_name" content="越今朝的博客">
-<meta property="og:description" content="Part3 The Kernel在这个部分，我们更详细的研究JOS内核（最后还会写一些代码）。与引导加载器一样，内核从一些汇编语言代码开始，这些代码会进行设置，以便C语言代码可以正确执行。">
+<meta property="og:description" content="在这个部分，我们更详细的研究JOS内核（最后还会写一些代码）。与引导加载器一样，内核从一些汇编语言代码开始，这些代码会进行设置，以便C语言代码可以正确执行。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2020-12-12T04:20:08.000Z">
-<meta property="article:modified_time" content="2021-01-31T05:18:18.150Z">
+<meta property="article:modified_time" content="2021-03-07T02:07:16.774Z">
 <meta property="article:author" content="越今朝">
 <meta property="article:tag" content="xv6">
 <meta name="twitter:card" content="summary">
@@ -95,7 +95,7 @@
       
         <!-- Table of Contents -->
         
-        <h2 id="Part3-The-Kernel"><a href="#Part3-The-Kernel" class="headerlink" title="Part3 The Kernel"></a>Part3 The Kernel</h2><p>在这个部分，我们更详细的研究JOS内核（最后还会写一些代码）。与引导加载器一样，内核从一些汇编语言代码开始，这些代码会进行设置，以便C语言代码可以正确执行。</p>
+        <p>在这个部分，我们更详细的研究JOS内核（最后还会写一些代码）。与引导加载器一样，内核从一些汇编语言代码开始，这些代码会进行设置，以便C语言代码可以正确执行。</p>
 <a id="more"></a>
 
 <h3 id="使用虚拟内存来解决位置依赖问题"><a href="#使用虚拟内存来解决位置依赖问题" class="headerlink" title="使用虚拟内存来解决位置依赖问题"></a>使用虚拟内存来解决位置依赖问题</h3><p>如上一章看到的，引导加载器的链接地址和加载地址完全匹配，但是内核的链接地址和加载地址之间存在相当大的差异。我在这里贴一下上一章的代码。</p>
@@ -378,7 +378,7 @@
       
         <strong class="toc-title">Content</strong>
         <div class="toc-widget-list">
-              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Part3-The-Kernel"><span class="toc-number">1.</span> <span class="toc-text">Part3 The Kernel</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#使用虚拟内存来解决位置依赖问题"><span class="toc-number">1.1.</span> <span class="toc-text">使用虚拟内存来解决位置依赖问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#格式化打印到控制台"><span class="toc-number">1.2.</span> <span class="toc-text">格式化打印到控制台</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#栈"><span class="toc-number">1.3.</span> <span class="toc-text">栈</span></a></li></ol></li></ol>
+              <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#使用虚拟内存来解决位置依赖问题"><span class="toc-number">1.</span> <span class="toc-text">使用虚拟内存来解决位置依赖问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#格式化打印到控制台"><span class="toc-number">2.</span> <span class="toc-text">格式化打印到控制台</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#栈"><span class="toc-number">3.</span> <span class="toc-text">栈</span></a></li></ol>
           </div>
       </div>
     </div>

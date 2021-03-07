@@ -5,15 +5,15 @@
   
   <title>xv6-6.828-lab1-part1:PC Bootstrap | 越今朝的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Part1：引导PC这个部分的主要任务就是使用qemu模拟器引导JOS，也就是将操作系统内核加载到内存中，启动它。">
+  <meta name="description" content="这个部分的主要任务就是使用qemu模拟器引导JOS，也就是将操作系统内核加载到内存中，启动它。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="xv6-6.828-lab1-part1:PC Bootstrap">
 <meta property="og:url" content="http://songrui625.github.io/2020/12/10/xv6-6-828-lab1-part1-PC-Bootstrap/index.html">
 <meta property="og:site_name" content="越今朝的博客">
-<meta property="og:description" content="Part1：引导PC这个部分的主要任务就是使用qemu模拟器引导JOS，也就是将操作系统内核加载到内存中，启动它。">
+<meta property="og:description" content="这个部分的主要任务就是使用qemu模拟器引导JOS，也就是将操作系统内核加载到内存中，启动它。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2020-12-10T04:50:03.000Z">
-<meta property="article:modified_time" content="2020-12-12T04:19:33.435Z">
+<meta property="article:modified_time" content="2021-03-07T02:07:02.658Z">
 <meta property="article:author" content="越今朝">
 <meta property="article:tag" content="xv6">
 <meta name="twitter:card" content="summary">
@@ -95,7 +95,7 @@
       
         <!-- Table of Contents -->
         
-        <h2 id="Part1：引导PC"><a href="#Part1：引导PC" class="headerlink" title="Part1：引导PC"></a>Part1：引导PC</h2><p>这个部分的主要任务就是使用qemu模拟器引导JOS，也就是将操作系统内核加载到内存中，启动它。</p>
+        <p>这个部分的主要任务就是使用qemu模拟器引导JOS，也就是将操作系统内核加载到内存中，启动它。</p>
 <a id="more"></a>
 
 <h3 id="启程：x86汇编"><a href="#启程：x86汇编" class="headerlink" title="启程：x86汇编"></a>启程：x86汇编</h3><p>熟悉x86汇编的话完全可以略过这一部分。如果想学习基本的x86汇编，讲义也给出了一个比较不错的入门文章：<a href="http://www.delorie.com/djgpp/doc/brennan/brennan_att_inline_djgpp.html" target="_blank" rel="noopener">Brennan’s Guide to inline Assembly</a>.</p>
@@ -234,7 +234,7 @@
       
         <strong class="toc-title">Content</strong>
         <div class="toc-widget-list">
-              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Part1：引导PC"><span class="toc-number">1.</span> <span class="toc-text">Part1：引导PC</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#启程：x86汇编"><span class="toc-number">1.1.</span> <span class="toc-text">启程：x86汇编</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#模拟x86"><span class="toc-number">1.2.</span> <span class="toc-text">模拟x86</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#The-ROM-BIOS"><span class="toc-number">1.3.</span> <span class="toc-text">The ROM BIOS</span></a></li></ol></li></ol>
+              <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#启程：x86汇编"><span class="toc-number">1.</span> <span class="toc-text">启程：x86汇编</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#模拟x86"><span class="toc-number">2.</span> <span class="toc-text">模拟x86</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#The-ROM-BIOS"><span class="toc-number">3.</span> <span class="toc-text">The ROM BIOS</span></a></li></ol>
           </div>
       </div>
     </div>
