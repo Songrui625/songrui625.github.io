@@ -12,14 +12,14 @@
 <meta property="og:site_name" content="越今朝的博客">
 <meta property="og:description" content="这个lab的主要任务是为JOS实现内存管理。内存管理包括两个组件： 1、供kernel使用的physical memory allocator。2、virtual memory。">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="http://songrui625.github.io/2021/01/23/xv6-6-828-lab2-part1-Physical-Page-Management/D:%5CSongrui625%5Chexo%5Csource_posts%5Cxv6-6-828-lab2-part1-Physical-Page-Management%5Cimage-20210309195849822.png">
-<meta property="og:image" content="http://songrui625.github.io/2021/01/23/xv6-6-828-lab2-part1-Physical-Page-Management/Songrui625/hexo/source/_posts/xv6-6-828-lab2-part1-Physical-Page-Management/1E86FC826CB074342E4AB486F0DD7EF1.png">
+<meta property="og:image" content="http://songrui625.github.io/2021/01/23/xv6-6-828-lab2-part1-Physical-Page-Management/image-20210309195849822.png">
+<meta property="og:image" content="http://songrui625.github.io/2021/01/23/xv6-6-828-lab2-part1-Physical-Page-Management/1E86FC826CB074342E4AB486F0DD7EF1.png">
 <meta property="article:published_time" content="2021-01-23T06:40:50.000Z">
-<meta property="article:modified_time" content="2021-03-09T13:17:05.242Z">
+<meta property="article:modified_time" content="2021-03-09T13:25:28.300Z">
 <meta property="article:author" content="越今朝">
 <meta property="article:tag" content="xv6">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://songrui625.github.io/2021/01/23/xv6-6-828-lab2-part1-Physical-Page-Management/D:%5CSongrui625%5Chexo%5Csource_posts%5Cxv6-6-828-lab2-part1-Physical-Page-Management%5Cimage-20210309195849822.png">
+<meta name="twitter:image" content="http://songrui625.github.io/2021/01/23/xv6-6-828-lab2-part1-Physical-Page-Management/image-20210309195849822.png">
   
     <link rel="alternate" href="/atom.xml" title="越今朝的博客" type="application/atom+xml">
   
@@ -153,7 +153,7 @@
 <p>3）然后是<code>IO hole</code>[IOPHYSMEM, EXTPHYSMEM）,这部分是不允许分配到。  </p>
 <p>4) 然后是<code>extended memory</code>[EXTPHYSMEM, …)有些是空闲的，有些却是正在使用的。内核存在于物理内存的哪里呢？哪些页面已经被页表和其他数据结构使用？  </p>
 <p>这四个问题需要对虚拟内存的布局和物理内存布局有一个清晰的认识。我们回顾一下lab1的物理内存布局：   </p>
-<p><img src="/2021/01/23/xv6-6-828-lab2-part1-Physical-Page-Management/D:%5CSongrui625%5Chexo%5Csource_posts%5Cxv6-6-828-lab2-part1-Physical-Page-Management%5Cimage-20210309195849822.png" alt="image-20210309195849822"></p>
+<p><img src="/2021/01/23/xv6-6-828-lab2-part1-Physical-Page-Management/image-20210309195849822.png" alt="image-20210309195849822"></p>
 <p>Low Memory也就是上面提到的 base memory。在<code>pmap.c</code>中的<code>detect_memory()</code>函数中打印了base memory一共有多大。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Physical memory: 131072K available, base = 640K, extended = 130432K</span><br></pre></td></tr></table></figure>
 
@@ -166,7 +166,7 @@
 <p>所以<code>0x00100000</code>就是内核被装载进物理内存中的地址，也正是<code>Extended Memory</code>的起始地址，那哪些页面已经被内核、页表和其他数据结构使用了呢？  </p>
 <p>回顾一下<code>boot_alloc（）</code>里面的魔术<code>end</code>指向了内核的bss段末尾，而我们又分配了页面给<code>kern_pgdir</code>和<code>pages</code>，下一个空闲的页面的虚拟地址就是<code>boot_alloc(0)</code>，<code>boot_alloc(0)</code>的返回值之前的页面就是已经被内核、页表(<code>kern_pgdir</code>)和其他数据结构(<code>struct PageInfo</code>)使用了的页面。</p>
 <p>我们这里在总结下lab1中的内存布局： </p>
-<img src="/2021/01/23/xv6-6-828-lab2-part1-Physical-Page-Management/Songrui625\hexo\source\_posts\xv6-6-828-lab2-part1-Physical-Page-Management\1E86FC826CB074342E4AB486F0DD7EF1.png" alt="img" style="zoom: 50%;">
+<img src="/2021/01/23/xv6-6-828-lab2-part1-Physical-Page-Management/1E86FC826CB074342E4AB486F0DD7EF1.png" alt="img" style="zoom: 50%;">
 
 <p>弄清楚了内存布局以及哪些页面是空闲的，哪些是正在使用的，就可以来实现代码了。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">size_t</span> i;</span><br><span class="line"><span class="comment">// 第一页要保存实模式下的IDT。</span></span><br><span class="line">pages[<span class="number">0</span>].pp_ref = <span class="number">1</span>;</span><br><span class="line">pages[<span class="number">0</span>].pp_link = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//base memory剩下的159页，都可以使用，利用头插法插入空闲页面。</span></span><br><span class="line"><span class="keyword">for</span> (i = <span class="number">1</span>; i &lt; npages_basemem; i++) &#123;</span><br><span class="line">	pages[i].pp_ref = <span class="number">0</span>;</span><br><span class="line">	pages[i].pp_link = page_free_list;</span><br><span class="line">	page_free_list = &amp;pages[i];</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// IO hole是不能被分配的，标记为正在使用。</span></span><br><span class="line"><span class="keyword">for</span> (i = IOPHYSMEM / PGSIZE; i &lt; EXTPHYSMEM / PGSIZE; i++) &#123;</span><br><span class="line">	pages[i].pp_ref = <span class="number">1</span>;</span><br><span class="line">	pages[i].pp_link = <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//注意，pages数组存储的是物理内存中每一页的状态，所以对应的索引应该是 物理地址 / PGSIZE;</span></span><br><span class="line"><span class="comment">//而boot_alloc(0)返回的是一个虚拟地址，需要用PADDR宏转换为物理地址。</span></span><br><span class="line"><span class="keyword">size_t</span> free_idx = PADDR(boot_alloc(<span class="number">0</span>)) / PGSIZE;</span><br><span class="line"><span class="comment">//内核代码的页面直到free_idx之前页面都是已经使用过的。</span></span><br><span class="line"><span class="keyword">for</span> (i = EXTPHYSMEM / PGSIZE; i &lt; free_idx; i++) &#123;</span><br><span class="line">	pages[i].pp_ref = <span class="number">1</span>;</span><br><span class="line">	pages[i].pp_link = <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//free_idx后面的页面都是空闲的。</span></span><br><span class="line"><span class="keyword">for</span> (i = free_idx; i &lt; npages; i++) &#123;</span><br><span class="line">	pages[i].pp_ref = <span class="number">0</span>;</span><br><span class="line">	pages[i].pp_link = page_free_list;</span><br><span class="line">	page_free_list = &amp;pages[i];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
