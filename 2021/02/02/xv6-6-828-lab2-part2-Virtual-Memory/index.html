@@ -5,22 +5,22 @@
   
   <title>xv6-6.828-lab2-part2:Virtual Memory | 越今朝的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="在开始这个part之前，需要熟悉x86保护模式下的内存管理机制：分段和分页。">
+  <meta name="description" content="在开始这个part之前，需要熟悉x86保护模式下的内存管理机制：分段和页面翻译。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="xv6-6.828-lab2-part2:Virtual Memory">
 <meta property="og:url" content="http://songrui625.github.io/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/index.html">
 <meta property="og:site_name" content="越今朝的博客">
-<meta property="og:description" content="在开始这个part之前，需要熟悉x86保护模式下的内存管理机制：分段和分页。">
+<meta property="og:description" content="在开始这个part之前，需要熟悉x86保护模式下的内存管理机制：分段和页面翻译。">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="http://songrui625.github.io/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/D:%5CSongrui625%5Chexo%5Csource_posts%5Cxv6-6-828-lab2-part2-Virtual-Memory%5Cimage-20210203124318815.png">
-<meta property="og:image" content="http://songrui625.github.io/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/D:%5CSongrui625%5Chexo%5Csource_posts%5Cxv6-6-828-lab2-part2-Virtual-Memory%5Cimage-20210203124145016.png">
-<meta property="og:image" content="file://D:/Songrui625/hexo/source/_posts/xv6-6-828-lab2-part2-Virtual-Memory/image-20210204111129901.png?lastModify=1612412610">
+<meta property="og:image" content="http://songrui625.github.io/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/image-20210203124318815.png">
+<meta property="og:image" content="http://songrui625.github.io/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/image-20210203124145016.png">
+<meta property="og:image" content="http://songrui625.github.io/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/image-20210204111129901.png?lastModify=1612412610">
 <meta property="article:published_time" content="2021-02-01T16:01:01.000Z">
-<meta property="article:modified_time" content="2021-03-03T15:36:36.956Z">
+<meta property="article:modified_time" content="2021-03-10T15:24:43.406Z">
 <meta property="article:author" content="越今朝">
 <meta property="article:tag" content="xv6">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://songrui625.github.io/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/D:%5CSongrui625%5Chexo%5Csource_posts%5Cxv6-6-828-lab2-part2-Virtual-Memory%5Cimage-20210203124318815.png">
+<meta name="twitter:image" content="http://songrui625.github.io/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/image-20210203124318815.png">
   
     <link rel="alternate" href="/atom.xml" title="越今朝的博客" type="application/atom+xml">
   
@@ -99,15 +99,16 @@
       
         <!-- Table of Contents -->
         
-        <p>在开始这个part之前，需要熟悉x86保护模式下的内存管理机制：分段和分页。</p>
+        <p>在开始这个part之前，需要熟悉x86保护模式下的内存管理机制：分段和页面翻译。</p>
 <a id="more"></a>
 
 <blockquote>
 <p><strong>Exercise 2.</strong> Look at chapters 5 and 6 of the <a href="https://pdos.csail.mit.edu/6.828/2018/readings/i386/toc.htm" target="_blank" rel="noopener">Intel 80386 Reference Manual</a>, if you haven’t done so already. Read the sections about page translation and page-based protection closely (5.2 and 6.4). We recommend that you also skim the sections about segmentation; while JOS uses the paging hardware for virtual memory and protection, segment translation and segment-based protection cannot be disabled on the x86, so you will need a basic understanding of it.</p>
 </blockquote>
 <p><strong>一定要去看80386的参考手册，一定要看5.2节和6.4节</strong></p>
-<h2 id="Virtual-Linear-and-Physical-Addresses"><a href="#Virtual-Linear-and-Physical-Addresses" class="headerlink" title="Virtual, Linear, and Physical Addresses"></a>Virtual, Linear, and Physical Addresses</h2><p>在x86架构术语里，虚拟地址(<code>virtual address</code>)包括一个段选择器(<code>segment selector</code>)和一个偏移量(<code>offset</code>)。线性地址(<code>linear address</code>)是在段翻译之后得到的。物理地址(<code>physical address</code>)是在页翻译后得到的，最后会在总线上传到RAM。  </p>
-<p>C指针是虚拟地址的<code>offset</code>部分，在<code>boot/boot.S</code>中，我们建立了<code>全局描述符表(GDT)</code>，它可以通过设置所有的段基地址到0，范围到0xffffffff来关闭分段翻译。因此段选择器不会生效而且线性地址总是等于虚拟地址的偏移量，也就是说我们可以不去考虑线性地址，甚至不用去考虑段选择器，直接将指针看作线性地址就行，默认虚拟地址等于线性地址。在lab3中会与分段进行更多的打交道来设置特权级。但至于内存翻译，在所有labs中，我们可以忽略分段而专注于分页。  </p>
+<h2 id="Virtual-Linear-and-Physical-Addresses"><a href="#Virtual-Linear-and-Physical-Addresses" class="headerlink" title="Virtual, Linear, and Physical Addresses"></a>Virtual, Linear, and Physical Addresses</h2><p>在<strong>x86架构</strong>术语里，虚拟地址(<code>virtual address</code>)包括一个段选择器(<code>segment selector</code>)和一个偏移量(<code>offset</code>)。线性地址(<code>linear address</code>)是在段翻译之后得到的。物理地址(<code>physical address</code>)是在页翻译后得到的，最后会在总线上传到RAM。  </p>
+<p>注意：<strong>x86架构(32位)</strong>包含虚拟地址、线性地址和物理地址这三个术语。而linux内核中明确说明了：<strong>虚拟地址就是线性地址，因为禁用了分段机制</strong>。而在术语上通常说线性地址，但在内核编写中，通常说的是虚拟地址，这是一个历史包袱，不用过于纠结。  </p>
+<p>C指针是虚拟地址的<code>offset</code>部分，在<code>boot/boot.S</code>中，我们<strong>建立了<code>全局描述符表(GDT)</code>，它可以通过设置所有的段基地址到0，范围到0xffffffff来关闭分段翻译机制</strong>。因此段选择器不会生效而且线性地址总是等于虚拟地址的偏移量，也就是说我们可以不去考虑线性地址，甚至不用去考虑段选择器，直接将指针看作线性地址就行，默认虚拟地址等于线性地址。在lab3中会与分段进行更多的打交道来设置特权级。但至于内存翻译，在所有labs中，我们可以忽略分段而专注于分页。  </p>
 <p>回想下lab1的part3，我们建立了一个简单的页表，这样内核可以在链接地址0xf0100000上运行代码，即使它实际上是被加载到物理内存ROM BIOS上地址为0x00100000。这个页表仅仅映射了4MB的的内存。在这个lab中，我们会做一下拓展，映射从虚拟地址0xf0000000开始的256MB字节内存，并且映射虚拟地址空间中的许多其他区域。  </p>
 <p>一旦进入到实模式，就无法直接使用线性或者物理地址，所有的内存引用都会被解释为虚拟地址然后被MMU进行翻译，这意味着<strong>C语言中所有的指针都是虚拟地址</strong>。  </p>
 <p>JOS 内核定义了两种地址<code>uintptr_t：虚拟地址</code>和<code>phyaddr_t:物理地址</code>，它们都是<code>uint32_t</code>的同义词，意味着它们都是整数，不是指针，不可以被解引用，但是强制转换为指针后是可以解引用的。物理地址解引用后得到的地址并不能真正的向其读和写，等等就会介绍为什么。</p>
@@ -131,9 +132,9 @@
 <p><strong>argument</strong>:1.pgdir: 页目录的虚拟地址 2.va: 虚拟地址 3.create: 页表为空时是否创建页表，true为创建，false为不创建。</p>
 <p><strong>return</strong>:指向va对应页表项(entry可以翻译为条目或者项)的指针。  </p>
 <p>在x86中，虚拟地址va的格式与翻译过程如下：</p>
-<p><img src="/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/D:%5CSongrui625%5Chexo%5Csource_posts%5Cxv6-6-828-lab2-part2-Virtual-Memory%5Cimage-20210203124318815.png" alt="image-20210203124318815"></p>
-<p><img src="/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/D:%5CSongrui625%5Chexo%5Csource_posts%5Cxv6-6-828-lab2-part2-Virtual-Memory%5Cimage-20210203124145016.png" alt="image-20210203124145016"></p>
-<p><img src="file://D:/Songrui625/hexo/source/_posts/xv6-6-828-lab2-part2-Virtual-Memory/image-20210204111129901.png?lastModify=1612412610" alt="image-20210204111129901"></p>
+<p><img src="/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/image-20210203124318815.png" alt="image-20210203124318815"></p>
+<p><img src="/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/image-20210203124145016.png" alt="image-20210203124145016"></p>
+<p><img src="/2021/02/02/xv6-6-828-lab2-part2-Virtual-Memory/image-20210204111129901.png?lastModify=1612412610" alt="image-20210204111129901"></p>
 <p>下面来讲解一下Page Trasnlation的过程，首先通过虚拟地址的高10位拿到页目录的索引，这样就可以定位到页目录项。有了页目录项后，可以通过查看权限位Present来判断页面是否生效，如果生效，我们就可以通过页目录项的高20位拿到页表的物理地址，然后我们通过虚拟地址的中间10位拿到页表的索引，这样就可以定位到页表项，继续查看权限位Present来判断该页是否生效，如果生效，我们就可以通过页表项的高20位拿到具体页的物理地址。最后通过虚拟地址的低12位拿到页的索引，这样我们就成功拿到了对应的物理地址了。  </p>
 <p>为什么需要页目录，单独页表不好吗？页目录可以提高寻址范围，页目录中有1024个页目录项，页表中有1024个个页表项，最大可寻址1024*1024 = 1M个页。如果只是单独一个页表，最大可寻址1024个页。  </p>
 <p>页目录项和页表项中的页帧地址是物理地址还是虚拟地址：页帧指的是物理地址。  </p>
