@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>xv6-6.828-lab2-part3:Kernel Address Space | 越今朝的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="JOS把处理器32位的线性地址空间分成两部分。用户空间（进程）,它负责控制控制下部的布局和内容，而内核空间始终保持对上部的完全控制。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xv6-6.828-lab2-part3:Kernel Address Space">
+<meta property="og:url" content="http://songrui625.github.io/2021/03/15/xv6-6-828-lab2-part3-Kernel-Address-Space/index.html">
+<meta property="og:site_name" content="越今朝的博客">
+<meta property="og:description" content="JOS把处理器32位的线性地址空间分成两部分。用户空间（进程）,它负责控制控制下部的布局和内容，而内核空间始终保持对上部的完全控制。">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://songrui625.github.io/2021/03/15/xv6-6-828-lab2-part3-Kernel-Address-Space/6A42BD1C118C68DB57D84AD5F259E99A.png">
+<meta property="article:published_time" content="2021-03-15T15:07:38.000Z">
+<meta property="article:modified_time" content="2021-03-16T13:27:37.082Z">
+<meta property="article:author" content="越今朝">
+<meta property="article:tag" content="xv6">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://songrui625.github.io/2021/03/15/xv6-6-828-lab2-part3-Kernel-Address-Space/6A42BD1C118C68DB57D84AD5F259E99A.png">
+  
+    <link rel="alternate" href="/atom.xml" title="越今朝的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    
+    <div id="header-inner" class="inner">
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://songrui625.github.io"></form>
+      </div>
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">首页</a>
+        
+          <a class="main-nav-link" href="/archives">归档</a>
+        
+          <a class="main-nav-link" href="/about">关于</a>
+        
+      </nav>
+      
+    </div>
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">越今朝的博客</a>
+      </h1>
+      
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-xv6-6-828-lab2-part3-Kernel-Address-Space" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/03/15/xv6-6-828-lab2-part3-Kernel-Address-Space/" class="article-date">
+  <time datetime="2021-03-15T15:07:38.000Z" itemprop="datePublished">2021-03-15</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      xv6-6.828-lab2-part3:Kernel Address Space
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- Table of Contents -->
+        
+        <p>JOS把处理器32位的线性地址空间分成两部分。用户空间（进程）,它负责控制控制下部的布局和内容，而内核空间始终保持对上部的完全控制。<a id="more"></a>分界线是由<code>inc/memlayout.h</code>中的<code>ULIM</code>定义的，为内核保留大约256M的虚拟地址空间。这样也解释了为什么我们在lab1中将内核安排在这么高的一个链接地址，否则，在内核的虚拟地址空间中将没有足够的空间同时映射到其下方的用户环境中。  </p>
+<h2 id="Permission-and-Fault-Isolation"><a href="#Permission-and-Fault-Isolation" class="headerlink" title="Permission and Fault Isolation"></a>Permission and Fault Isolation</h2><p>因为内核和用户内存都存在于每个环境的地址空间中，我们不得不在x86页表中使用权限位来允许用户代码只可以访问地址空间的用户部分。否则，用户代码的bugs可能会覆盖内核数据，导致崩溃或者更奇妙的故障。用户代码也可以窃取其他环境的私有数据。注意到可写权限位(<code>PTE_W</code>)会同时影响用户代码和内核代码。  </p>
+<p>对于<code>ULIM</code>上方的内存，用户环境没有任何权限，但是内核可能会读写这部分内存。对于<code>[UTOP, ULIM)</code>范围内的地址，内核和用户环境拥有同样的权限：可以读取但不能写入。这个范围的地址常用于将某些内核数据结构以只读方式暴露给用户环境。最后，<code>UTOP</code>以下的地址空间供用户环境使用。用户环境会设置权限来访问这部分内存。  </p>
+<h2 id="Initializing-the-Kernel-Address-Space"><a href="#Initializing-the-Kernel-Address-Space" class="headerlink" title="Initializing the Kernel Address Space"></a>Initializing the Kernel Address Space</h2><p>现在你将建立<code>UTOP</code>以上的地址空间：地址空间的内核部分。(这句话有一些问题，既然<code>ULIM</code>才是内核空间和用户空间的分界线，为什么这里说的是<code>UTOP</code>以上？)<code>inc/memlayout.h</code>展示了你将使用的内存布局。你将会使用你刚刚编写的那些函数来建立线性地址到物理地址的映射。  </p>
+<blockquote>
+<p><strong>Exercise 5.</strong> Fill in the missing code in <code>mem_init()</code> after the call to <code>check_page()</code>.</p>
+<p>Your code should now pass the <code>check_kern_pgdir()</code> and <code>check_page_installed_pgdir()</code> checks.</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">//////////////////////////////////////////////////////////////////////</span></span><br><span class="line"><span class="comment">// Now we set up virtual memory</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//////////////////////////////////////////////////////////////////////</span></span><br><span class="line"><span class="comment">// Map 'pages' read-only by the user at linear address UPAGES</span></span><br><span class="line"><span class="comment">// Permissions:</span></span><br><span class="line"><span class="comment">//    - the new image at UPAGES -- kernel R, user R</span></span><br><span class="line"><span class="comment">//      (ie. perm = PTE_U | PTE_P)</span></span><br><span class="line"><span class="comment">//    - pages itself -- kernel RW, user NONE</span></span><br><span class="line"><span class="comment">// Your code goes here:</span></span><br><span class="line">boot_map_region(kern_pgdir, UPAGES, PTSIZE, PADDR(pages), PTE_U);</span><br><span class="line"><span class="comment">//////////////////////////////////////////////////////////////////////</span></span><br><span class="line"><span class="comment">// Use the physical memory that 'bootstack' refers to as the kernel</span></span><br><span class="line"><span class="comment">// stack.  The kernel stack grows down from virtual address KSTACKTOP.</span></span><br><span class="line"><span class="comment">// We consider the entire range from [KSTACKTOP-PTSIZE, KSTACKTOP)</span></span><br><span class="line"><span class="comment">// to be the kernel stack, but break this into two pieces:</span></span><br><span class="line"><span class="comment">//     * [KSTACKTOP-KSTKSIZE, KSTACKTOP) -- backed by physical memory</span></span><br><span class="line"><span class="comment">//     * [KSTACKTOP-PTSIZE, KSTACKTOP-KSTKSIZE) -- not backed; so if</span></span><br><span class="line"><span class="comment">//       the kernel overflows its stack, it will fault rather than</span></span><br><span class="line"><span class="comment">//       overwrite memory.  Known as a "guard page".</span></span><br><span class="line"><span class="comment">//     Permissions: kernel RW, user NONE</span></span><br><span class="line"><span class="comment">// Your code goes here:</span></span><br><span class="line">boot_map_region(kern_pgdir, KSTACKTOP - KSTKSIZE, KSTKSIZE, PADDR(bootstack), PTE_W);</span><br><span class="line"><span class="comment">//////////////////////////////////////////////////////////////////////</span></span><br><span class="line"><span class="comment">// Map all of physical memory at KERNBASE.</span></span><br><span class="line"><span class="comment">// Ie.  the VA range [KERNBASE, 2^32) should map to</span></span><br><span class="line"><span class="comment">//      the PA range [0, 2^32 - KERNBASE)</span></span><br><span class="line"><span class="comment">// We might not have 2^32 - KERNBASE bytes of physical memory, but</span></span><br><span class="line"><span class="comment">// we just set up the mapping anyway.</span></span><br><span class="line"><span class="comment">// Permissions: kernel RW, user NONE</span></span><br><span class="line"><span class="comment">// Your code goes here:</span></span><br><span class="line"><span class="keyword">size_t</span> kern_size = ROUNDUP((<span class="number">0xffffffff</span> - KERNBASE), PGSIZE);</span><br><span class="line">boot_map_region(kern_pgdir, KERNBASE, kern_size, PADDR((<span class="keyword">void</span> *)KERNBASE), PTE_W);</span><br></pre></td></tr></table></figure>
+
+<p>注意设置相应的权限就可以了，没有什么太大的问题。  </p>
+<blockquote>
+<p><strong>Question</strong></p>
+<ol>
+<li><p>What entries (rows) in the page directory have been filled in at this point? What addresses do they map and where do they point? In other words, fill out this table as much as possible:</p>
+<table>
+<thead>
+<tr>
+<th>Entry</th>
+<th>Base Virtual Address</th>
+<th>Points to (logically):</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1023</td>
+<td>?</td>
+<td>Page table for top 4MB of phys memory</td>
+</tr>
+<tr>
+<td>1022</td>
+<td>?</td>
+<td>?</td>
+</tr>
+<tr>
+<td>.</td>
+<td>?</td>
+<td>?</td>
+</tr>
+<tr>
+<td>.</td>
+<td>?</td>
+<td>?</td>
+</tr>
+<tr>
+<td>.</td>
+<td>?</td>
+<td>?</td>
+</tr>
+<tr>
+<td>2</td>
+<td>0x00800000</td>
+<td>?</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0x00400000</td>
+<td>?</td>
+</tr>
+<tr>
+<td>0</td>
+<td>0x00000000</td>
+<td>[see next question]</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>We have placed the kernel and user environment in the same address space. Why will user programs not be able to read or write the kernel’s memory? What specific mechanisms protect the kernel memory?</p>
+</li>
+<li><p>What is the maximum amount of physical memory that this operating system can support? Why?</p>
+</li>
+<li><p>How much space overhead is there for managing memory, if we actually had the maximum amount of physical memory? How is this overhead broken down?</p>
+</li>
+<li><p>Revisit the page table setup in <code>kern/entry.S</code> and <code>kern/entrypgdir.c</code>. Immediately after we turn on paging, EIP is still a low number (a little over 1MB). At what point do we transition to running at an EIP above KERNBASE? What makes it possible for us to continue executing at a low EIP between when we enable paging and when we begin running at an EIP above KERNBASE? Why is this transition necessary?</p>
+</li>
+</ol>
+</blockquote>
+<p>1、让我们先回顾以下在<code>mem_init()</code>中，内核做了什么，首先在页目录中，插入了自身页目录的映射，然后映射了pages数组，内核栈和<code>KERNBASE</code>以上256MB的内存。</p>
+<img src="/2021/03/15/xv6-6-828-lab2-part3-Kernel-Address-Space/6A42BD1C118C68DB57D84AD5F259E99A.png" alt="img" style="zoom:50%;">
+
+<p>2、PTE_U没有被置为1。  </p>
+<p>3、UPAGES的大小为PTSIZE = 1024 * 4KB = 4MB， 而一个struct PageInfo大小为8B， 所以一共有 4MB / 8B = 512K 页，而一页物理页的大小是4KB，所以最大支持的物理内存一共是512K * 4K = 2048MB = 2GB。  </p>
+<p>4、页目录kern_pgdir + pages数组 + 页表。页目录占4KB, pages数组占4MB, 一共有512K页，那就是512K条页首地址，一条地址占32位，也就是4B，那么一共需要占512K * 4 = 2MB。所以一共占6MB + 4KB的开销。</p>
+<p>5、暂时还不理解，可能以后会清楚。  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://songrui625.github.io/2021/03/15/xv6-6-828-lab2-part3-Kernel-Address-Space/" data-id="ckmc1w71h0000fwu9gtmx6ghu" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/xv6/" rel="tag">xv6</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+ 
+<script src="/jquery/jquery.min.js"></script>
+
+  <div id="random_posts">
+    <h2>Recommended Posts</h2>
+    <div class="random_posts_ul">
+      <script>
+          var random_count =4
+          var site = {BASE_URI:'/'};
+          function load_random_posts(obj) {
+              var arr=site.posts;
+              if (!obj) return;
+              // var count = $(obj).attr('data-count') || 6;
+              for (var i, tmp, n = arr.length; n; i = Math.floor(Math.random() * n), tmp = arr[--n], arr[n] = arr[i], arr[i] = tmp);
+              arr = arr.slice(0, random_count);
+              var html = '<ul>';
+            
+              for(var j=0;j<arr.length;j++){
+                var item=arr[j];
+                html += '<li><strong>' + 
+                item.date + ':&nbsp;&nbsp;<a href="' + (site.BASE_URI+item.uri) + '">' + 
+                (item.title || item.uri) + '</a></strong>';
+                if(item.excerpt){
+                  html +='<div class="post-excerpt">'+item.excerpt+'</div>';
+                }
+                html +='</li>';
+                
+              }
+              $(obj).html(html + '</ul>');
+          }
+          $('.random_posts_ul').each(function () {
+              var c = this;
+              if (!site.posts || !site.posts.length){
+                  $.getJSON(site.BASE_URI + 'js/posts.js',function(json){site.posts = json;load_random_posts(c)});
+              } 
+               else{
+                load_random_posts(c);
+              }
+          });
+      </script>
+    </div>
+  </div>
+
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2021/03/07/15-445-645-lab2-B-Tree/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">15-445/645-lab2:B+Tree</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+ 
+     
+  <div class="comments" id="comments">
+    
+     
+       
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+       
+      
+      
+  </div>
+ 
+  
+
+</section>
+           
+    <aside id="sidebar">
+  
+    
+
+  
+    
+    <div class="widget-wrap">
+    
+      <div class="widget" id="toc-widget-fixed">
+      
+        <strong class="toc-title">Content</strong>
+        <div class="toc-widget-list">
+              <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Permission-and-Fault-Isolation"><span class="toc-number">1.</span> <span class="toc-text">Permission and Fault Isolation</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Initializing-the-Kernel-Address-Space"><span class="toc-number">2.</span> <span class="toc-text">Initializing the Kernel Address Space</span></a></li></ol>
+          </div>
+      </div>
+    </div>
+
+  
+    
+
+  
+    
+  
+    
+  
+    
+
+  
+    
+  
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-left">
+      &copy; 2014 - 2021 越今朝&nbsp;|&nbsp;
+      Theme by <a href="https://github.com/giscafer/hexo-theme-cafe/" target="_blank">Cafe</a>
+    </div>
+     <div id="footer-right">
+      Contact&nbsp;|&nbsp;1029229159@qq.com
+    </div>
+  </div>
+</footer>
+ 
+<script src="/jquery/jquery.min.js"></script>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">首页</a>
+  
+    <a href="/archives" class="mobile-nav-link">归档</a>
+  
+    <a href="/about" class="mobile-nav-link">关于</a>
+  
+</nav>
+    <img class="back-to-top-btn" src="/images/fly-to-top.png"/>
+<script>
+// Elevator script included on the page, already.
+window.onload = function() {
+  var elevator = new Elevator({
+    selector:'.back-to-top-btn',
+    element: document.querySelector('.back-to-top-btn'),
+    duration: 1000 // milliseconds
+  });
+}
+</script>
+      
+
+  
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "e2fb4051c49842688ce669e634bc983f",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+    
+
+  
+
+
+
+
+
+
+
+<!-- author:forvoid begin -->
+<!-- author:forvoid begin -->
+
+<!-- author:forvoid end -->
+
+<!-- author:forvoid end -->
+
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      })
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      })
+    </script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/mathjax/MathJax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+ 
+<script src="/js/is.js"></script>
+
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+<script src="/js/elevator.js"></script>
+
+  </div>
+</body>
+</html>
